@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.khaleesi.carfield</groupId>
-  <artifactId>org.khaleesi.carfield.tools.sparkjobserver.api</artifactId>
+  <artifactId>spark-job-server-client</artifactId>
   <version>1.0.0</version>
-  <name>org.khaleesi.carfield.tools.sparkjobserver.api</name>
+  <name>spark-job-server-client</name>
   <description>Java Lib for Spark Job Server Rest API</description>
   
   <dependencies>
@@ -24,4 +24,5 @@
 	     <classifier>jdk15</classifier>
 	 </dependency>
   </dependencies>
+  <url>https://github.com/bluebreezecf/SparkJobServerClient</url>
 </project>

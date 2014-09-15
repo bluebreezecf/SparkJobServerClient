@@ -1,20 +1,29 @@
 package org.khaleesi.carfield.tools.sparkjobserver.api;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 
@@ -31,6 +40,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private static Logger logger = Logger.getLogger(SparkJobServerClientImpl.class);
 	private static final int BUFFER_SIZE = 512 * 1024;
 	private String jobServerUrl;
+	private HttpClient httpClient;
 	
 	/**
 	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
@@ -43,41 +53,35 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			jobServerUrl = jobServerUrl + "/";
 		}
 		this.jobServerUrl = jobServerUrl;
+		this.httpClient = new DefaultHttpClient();
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public List<SparkJobJarInfo> getJars() {
-		HttpClient client = new DefaultHttpClient();
-		HttpGet getMethod = new HttpGet(jobServerUrl + "jars");
+	public List<SparkJobJarInfo> getJars() throws SparkJobServerClientException {
 		List<SparkJobJarInfo> sparkJobJarInfos = new ArrayList<SparkJobJarInfo>();
-		InputStream in = null;
 		try {
-			HttpResponse response = client.execute(getMethod);
+			HttpGet getMethod = new HttpGet(jobServerUrl + "jars");
+			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
-			//TODO check out the status code and determine whether process later or not 
-			
-			in = response.getEntity().getContent();
-			byte[] buf = new byte[BUFFER_SIZE];
-			int len = -1;
-			StringBuffer buffer = new StringBuffer();
-			while ((len = in.read(buf)) > 0) {
-				buffer.append(new String(buf, 0, len));
-			}
-			
-			String content = buffer.toString();
-			if (content.length() > 0) {
-				JSONObject jsonObj = JSONObject.fromObject(content);
-				//TODO Try to figure out the json format of the response and fill in sparkJobJarInfos
+			String resContent = getResponseContent(response.getEntity());
+			if (statusCode == HttpStatus.SC_OK) {
+				JSONObject jsonObj = JSONObject.fromObject(resContent);
+				Iterator<?> keyIter = jsonObj.keys();
+				while (keyIter.hasNext()) {
+					String jarName = (String)keyIter.next();
+					String uploadedTime = (String)jsonObj.get(jarName);
+					SparkJobJarInfo sparkJobJarInfo = new SparkJobJarInfo();
+					sparkJobJarInfo.setJarName(jarName);
+					sparkJobJarInfo.setUploadedTime(uploadedTime);
+					sparkJobJarInfos.add(sparkJobJarInfo);
+				}
+			} else {
+				logError(statusCode, resContent, true);
 			}
 		} catch (Exception e) {
-			logger.error("Error occurs when trying to get information of jars:", e);
-		} finally {
-			if (null != in) {
-				closeStream(in);
-			}
+			processException("Error occurs when trying to get information of jars:", e);
 		}
 		return sparkJobJarInfos;
 	}
@@ -85,13 +89,11 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public boolean uploadSparkJobJar(InputStream jarData, String appName)  
 	    throws SparkJobServerClientException {
 		if (jarData == null || appName == null || appName.trim().length() == 0) {
 			throw new SparkJobServerClientException("Invalid parameters.");
 		}
-		HttpClient client = new DefaultHttpClient();
 		HttpPost postMethod = new HttpPost(jobServerUrl + "jars/" + appName);
 		byte[] contents = new byte[BUFFER_SIZE];
 		int len = -1;
@@ -100,56 +102,64 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			while ((len = jarData.read(contents)) > 0) {
 				buff.append(new String(contents, 0, len));
 			}
-			HttpEntity entity = new ByteArrayEntity(buff.toString().getBytes());
+			ByteArrayEntity entity = new ByteArrayEntity(buff.toString().getBytes());
 			postMethod.setEntity(entity);
-			HttpResponse response = client.execute(postMethod);
-			
+			entity.setContentType("application/java-archive");
+			HttpResponse response = httpClient.execute(postMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
-			//TODO check out the right and wrong response
-			return true;
+			getResponseContent(response.getEntity());
+			if (statusCode == HttpStatus.SC_OK) {
+				return true;
+			}
 		} catch (Exception e) {
-			logger.error("Error occurs when uploading spark job jar:", e);
-			return false;
+			logger.error("Error occurs when uploading spark job jars:", e);
 		} finally {
 			closeStream(jarData);
 		}
-		
+		return false;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean uploadSparkJobJar(File jarFile, String appName)
+		    throws SparkJobServerClientException {
+		if (jarFile == null || !jarFile.getName().endsWith(".jar") 
+			|| appName == null || appName.trim().length() == 0) {
+			throw new SparkJobServerClientException("Invalid parameters.");
+		}
+		InputStream jarIn = null;
+		try {
+			jarIn = new FileInputStream(jarFile);
+		} catch (FileNotFoundException fnfe) {
+			String errorMsg = "Error occurs when getting stream of the given jar file";
+			logger.error(errorMsg, fnfe);
+			throw new SparkJobServerClientException(errorMsg, fnfe);
+		}
+		return uploadSparkJobJar(jarIn, appName);
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public List<String> getContexts() {
-		HttpClient client = new DefaultHttpClient();
-		HttpGet getMethod = new HttpGet(jobServerUrl + "contexts");
+	public List<String> getContexts() throws SparkJobServerClientException {
 		List<String> contexts = new ArrayList<String>();
-		InputStream in = null;
 		try {
-			HttpResponse response = client.execute(getMethod);
+			HttpGet getMethod = new HttpGet(jobServerUrl + "contexts");
+			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
-			//TODO check out the status code and determine whether process later or not 
-			
-			in = response.getEntity().getContent();
-			byte[] buf = new byte[BUFFER_SIZE];
-			int len = -1;
-			StringBuffer buffer = new StringBuffer();
-			while ((len = in.read(buf)) > 0) {
-				buffer.append(new String(buf, 0, len));
-			}
-			
-			String content = buffer.toString();
-			if (content.length() > 0) {
-				JSONObject jsonObj = JSONObject.fromObject(content);
-				//TODO Try to figure out the json format of the response and fill in contexts
+			String resContent = getResponseContent(response.getEntity());
+			if (statusCode == HttpStatus.SC_OK) {
+				JSONArray jsonArray = JSONArray.fromObject(resContent);
+				Iterator<?> iter = jsonArray.iterator();
+				while (iter.hasNext()) {
+					contexts.add((String)iter.next());
+				}
+			} else {
+				logError(statusCode, resContent, true);
 			}
 		} catch (Exception e) {
-			logger.error("Error occurs when trying to get information of contexts:", e);
-		} finally {
-			if (null != in) {
-				closeStream(in);
-			}
+			processException("Error occurs when trying to get information of contexts:", e);
 		}
 		return contexts;
 	}
@@ -157,54 +167,226 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public boolean createContext(String contextName, Map<String, String> params) {
-		// TODO Auto-generated method stub
+	public boolean createContext(String contextName, Map<String, String> params) 
+		throws SparkJobServerClientException {
+		try {
+			//TODO add a check for the validation of contextName naming
+			if (!isNotEmpty(contextName)) {
+				throw new SparkJobServerClientException("The given contextName is null or empty.");
+			}
+			StringBuffer postUrlBuff = new StringBuffer(jobServerUrl);
+			postUrlBuff.append("contexts/").append(contextName);
+			if (params != null && !params.isEmpty()) {
+				postUrlBuff.append('?');
+				int num = params.size();
+				for (String key : params.keySet()) {
+					postUrlBuff.append(key).append('=').append(params.get(key));
+					num--;
+					if (num > 0) {
+						postUrlBuff.append('&');
+					}
+				}
+				
+			}
+			HttpPost postMethod = new HttpPost(postUrlBuff.toString());
+			HttpResponse response = httpClient.execute(postMethod);
+			int statusCode = response.getStatusLine().getStatusCode();
+			String resContent = getResponseContent(response.getEntity());
+			if (statusCode == HttpStatus.SC_OK) {
+				return true;
+			} else {
+				logError(statusCode, resContent, false);
+			}
+		} catch (Exception e) {
+			processException("Error occurs when trying to create a context:", e);
+		}
 		return false;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public boolean deleteContext(String contextName) {
-		// TODO Auto-generated method stub
+	public boolean deleteContext(String contextName) 
+		throws SparkJobServerClientException {
+		try {
+			//TODO add a check for the validation of contextName naming
+			if (!isNotEmpty(contextName)) {
+				throw new SparkJobServerClientException("The given contextName is null or empty.");
+			}
+			StringBuffer postUrlBuff = new StringBuffer(jobServerUrl);
+			postUrlBuff.append("contexts/").append(contextName);
+			
+			HttpDelete deleteMethod = new HttpDelete(postUrlBuff.toString());
+			HttpResponse response = httpClient.execute(deleteMethod);
+			int statusCode = response.getStatusLine().getStatusCode();
+			String resContent = getResponseContent(response.getEntity());
+			if (statusCode == HttpStatus.SC_OK) {
+				return true;
+			} else {
+				logError(statusCode, resContent, false);
+			}
+		} catch (Exception e) {
+			processException("Error occurs when trying to delete the target context:", e);
+		}
 		return false;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public List<SparkJobInfo> getJobs() {
-		// TODO Auto-generated method stub
+	public List<SparkJobInfo> getJobs() throws SparkJobServerClientException {
+		List<SparkJobInfo> sparkJobInfos = new ArrayList<SparkJobInfo>();
+		try {
+			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs");
+			HttpResponse response = httpClient.execute(getMethod);
+			int statusCode = response.getStatusLine().getStatusCode();
+			String resContent = getResponseContent(response.getEntity());
+			if (statusCode == HttpStatus.SC_OK) {
+				JSONArray jsonArray = JSONArray.fromObject(resContent);
+				Iterator<?> iter = jsonArray.iterator();
+				while (iter.hasNext()) {
+					JSONObject jsonObj = (JSONObject)iter.next();
+					SparkJobInfo jobInfo = new SparkJobInfo();
+					jobInfo.setDuration(jsonObj.getString(SparkJobInfo.INFO_KEY_DURATION));
+					jobInfo.setClassPath(jsonObj.getString(SparkJobInfo.INFO_KEY_CLASSPATH));
+					jobInfo.setStartTime(jsonObj.getString(SparkJobInfo.INFO_KEY_START_TIME));
+					jobInfo.setContext(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_CONTEXT));
+					jobInfo.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
+					jobInfo.setJobId(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_JOB_ID));
+					setErrorDetails(SparkJobBaseInfo.INFO_KEY_RESULT, jsonObj, jobInfo);
+					sparkJobInfos.add(jobInfo);
+				}
+			} else {
+				logError(statusCode, resContent, true);
+			}
+		} catch (Exception e) {
+			processException("Error occurs when trying to get information of jobs:", e);
+		}
+		return sparkJobInfos;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public SparkJobResult startJob(String data, Map<String, String> params) throws SparkJobServerClientException {
+		try {
+			if (params == null || params.isEmpty()) {
+				throw new SparkJobServerClientException("The given params is null or empty.");
+			}
+			if (params.containsKey(ISparkJobServerClientConstants.PARAM_APP_NAME) &&
+			    params.containsKey(ISparkJobServerClientConstants.PARAM_CLASS_PATH)) {
+				StringBuffer postUrlBuff = new StringBuffer(jobServerUrl);
+				postUrlBuff.append("jobs?");
+				int num = params.size();
+				for (String key : params.keySet()) {
+					postUrlBuff.append(key).append('=').append(params.get(key));
+					num--;
+					if (num > 0) {
+						postUrlBuff.append('&');
+					}
+				}
+				HttpPost postMethod = new HttpPost(postUrlBuff.toString());
+				if (data != null) {
+					StringEntity strEntity = new StringEntity(data);
+					strEntity.setContentEncoding("UTF-8");
+					strEntity.setContentType("text/plain");
+					postMethod.setEntity(strEntity);
+				}
+				
+				HttpResponse response = httpClient.execute(postMethod);
+				String resContent = getResponseContent(response.getEntity());
+				return parseResult(resContent);
+			} else {
+				throw new SparkJobServerClientException("The given params should contains appName and classPath");
+			}
+		} catch (Exception e) {
+			processException("Error occurs when trying to start a new job:", e);
+		}
+		return null;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public SparkJobResult getJobResult(String jobId) throws SparkJobServerClientException {
+		try {
+			if (!isNotEmpty(jobId)) {
+				throw new SparkJobServerClientException("The given jobId is null or empty.");
+			}
+			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs/" + jobId);
+			HttpResponse response = httpClient.execute(getMethod);
+			String resContent = getResponseContent(response.getEntity());
+			return parseResult(resContent);
+		} catch (Exception e) {
+			processException("Error occurs when trying to get information of the target job:", e);
+		}
+		return null;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public SparkJobConfig getConfig(String jobId) throws SparkJobServerClientException {
+		try {
+			if (!isNotEmpty(jobId)) {
+				throw new SparkJobServerClientException("The given jobId is null or empty.");
+			}
+			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs/" + jobId + "/config");
+			HttpResponse response = httpClient.execute(getMethod);
+			String resContent = getResponseContent(response.getEntity());
+			JSONObject jsonObj = JSONObject.fromObject(resContent);
+			SparkJobConfig jobConfg = new SparkJobConfig();
+			Iterator<?> keyIter = jsonObj.keys();
+			while (keyIter.hasNext()) {
+				String key = (String)keyIter.next();
+				jobConfg.putConfigItem(key, jsonObj.get(key));
+			}
+			return jobConfg;
+		} catch (Exception e) {
+			processException("Error occurs when trying to get information of the target job config:", e);
+		}
 		return null;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
-	public SparkJobInfo getJob(String jobId) {
-		// TODO Auto-generated method stub
-		return null;
+	public void stop() {
+		this.httpClient.getConnectionManager().shutdown();
 	}
-
+	
 	/**
-	 * {@inheritDoc}
+	 * Gets the contents of the http response from the given <code>HttpEntity</code>
+	 * instance.
+	 * 
+	 * @param entity the <code>HttpEntity</code> instance holding the http response content
+	 * @return the corresponding response content
 	 */
-	@Override
-	public SparkJobConfig getConfig(String jobId) {
-		// TODO Auto-generated method stub
-		return null;
+	protected String getResponseContent(HttpEntity entity) {
+		byte[] buff = new byte[BUFFER_SIZE];
+		StringBuffer contents = new StringBuffer();
+		InputStream in = null;
+		try {
+			in = entity.getContent();
+			BufferedInputStream bis = new BufferedInputStream(in);
+			int readBytes = 0;
+			while ((readBytes = bis.read(buff)) != -1) {
+				contents.append(new String(buff, 0, readBytes));
+			}
+		} catch (Exception e) {
+			logger.error("Error occurs when trying to reading response", e);
+		} finally {
+			closeStream(in);
+		}
+		return contents.toString().trim();
 	}
-
+	
 	/**
 	 * Closes the given stream.
 	 * 
 	 * @param stream the input/output stream to be closed
 	 */
-	private void closeStream(Closeable stream) {
+	protected void closeStream(Closeable stream) {
 		if (stream != null) {
 			try {
 				stream.close();
@@ -214,5 +396,161 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} else {
 			logger.error("The given stream is null");
 		}
+	}
+	
+	/**
+	 * Handles the given exception with specific error message, and
+	 * generates a corresponding <code>SparkJobServerClientException</code>.
+	 * 
+	 * @param errorMsg the corresponding error message
+	 * @param e the exception to be handled
+	 * @throws SparkJobServerClientException the corresponding transformed 
+	 *        <code>SparkJobServerClientException</code> instance
+	 */
+	protected void processException(String errorMsg, Exception e) throws SparkJobServerClientException {
+		if (e instanceof SparkJobServerClientException) {
+			throw (SparkJobServerClientException)e;
+		}
+		logger.error(errorMsg, e);
+		throw new SparkJobServerClientException(errorMsg, e);
+	}
+	
+	/**
+	 * Judges the given string value is not empty or not.
+	 * 
+	 * @param value the string value to be checked
+	 * @return true indicates it is not empty, false otherwise
+	 */
+	protected boolean isNotEmpty(String value) {
+		return value != null && !value.isEmpty();
+	}
+	
+	/**
+	 * Logs the response information when the status is not 200 OK,
+	 * and throws an instance of <code>SparkJobServerClientException<code>.
+	 * 
+	 * @param errorStatusCode error status code
+	 * @param msg the message to indicates the status, it can be null
+	 * @param throwable true indicates throws an instance of <code>SparkJobServerClientException</code>
+	 *       with corresponding error message, false means only log the error message.
+	 * @throws SparkJobServerClientException containing the corresponding error message 
+	 */
+	private void logError(int errorStatusCode, String msg, boolean throwable) throws SparkJobServerClientException {
+		StringBuffer msgBuff = new StringBuffer("Spark Job Server ");
+		msgBuff.append(jobServerUrl).append(" response ").append(errorStatusCode);
+		if (null != msg) {
+			msgBuff.append(" ").append(msg);
+		}
+		String errorMsg = msgBuff.toString();
+		logger.error(errorMsg);
+		if (throwable) {
+			throw new SparkJobServerClientException(errorMsg);
+		}
+	}
+	
+	/**
+	 * Sets the information of the error details.
+	 * 
+	 * @param key the key contains the error details
+	 * @param parnetJsonObj the parent <code>JSONObject</code> instance
+	 * @param SparkJobBaseInfo the <code>SparkJobErrorInfo</code> instance to be set information
+	 */
+	private void setErrorDetails(String key, JSONObject parnetJsonObj, SparkJobBaseInfo jobErrorInfo) {
+		if (parnetJsonObj.containsKey(key)) {
+			JSONObject resultJson = parnetJsonObj.getJSONObject(key);
+			if (resultJson.containsKey(SparkJobInfo.INFO_KEY_RESULT_MESSAGE)) {
+				jobErrorInfo.setMessage(resultJson.getString(SparkJobInfo.INFO_KEY_RESULT_MESSAGE));
+			}
+			if (resultJson.containsKey(SparkJobInfo.INFO_KEY_RESULT_ERROR_CLASS)) {
+				jobErrorInfo.setErrorClass(resultJson.getString(SparkJobInfo.INFO_KEY_RESULT_ERROR_CLASS));
+			}
+			if (resultJson.containsKey(SparkJobInfo.INFO_KEY_RESULT_STACK)) {
+				JSONArray stackJsonArray = resultJson.getJSONArray(SparkJobInfo.INFO_KEY_RESULT_STACK);
+				String[] stack = new String[stackJsonArray.size()];
+				for (int i = 0; i < stackJsonArray.size(); i++) {
+					stack[i] = stackJsonArray.getString(i);
+				}
+				jobErrorInfo.setStack(stack);
+			}
+		}
+	}
+	
+	/**
+	 * Generates an instance of <code>SparkJobResult</code> according to the given contents.
+	 * 
+	 * @param resContent the content of a http response
+	 * @return the corresponding <code>SparkJobResult</code> instance
+	 * @throws Exception error occurs when parsing the http response content
+	 */
+	private SparkJobResult parseResult(String resContent) throws Exception {
+		JSONObject jsonObj = JSONObject.fromObject(resContent);
+		SparkJobResult jobResult = new SparkJobResult(resContent);
+		jobResult.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
+		if (SparkJobBaseInfo.INFO_STATUS_OK.equals(jobResult.getStatus())) {
+			//Job finished with results
+			jobResult.setResult(jsonObj.get(SparkJobBaseInfo.INFO_KEY_RESULT).toString());
+		} else if (containsAsynjobStatus(jsonObj)) {
+			//asynchronously started job only with status information
+			setAsynjobStatus(jobResult, jsonObj);
+		} else if (containsErrorInfo(jsonObj)) {
+			String errorKey = null;
+			if (jsonObj.containsKey(SparkJobBaseInfo.INFO_STATUS_ERROR)) {
+				errorKey = SparkJobBaseInfo.INFO_STATUS_ERROR;
+			} else if (jsonObj.containsKey(SparkJobBaseInfo.INFO_KEY_RESULT)) {
+				errorKey = SparkJobBaseInfo.INFO_KEY_RESULT;
+			} 
+			//Job failed with error details
+			setErrorDetails(errorKey, jsonObj, jobResult);
+		} else {
+			//Other unknown kind of value needs application to parse itself
+			Iterator<?> keyIter = jsonObj.keys();
+			while (keyIter.hasNext()) {
+				String key = (String)keyIter.next();
+				if (SparkJobInfo.INFO_KEY_STATUS.equals(key)) {
+					continue;
+				}
+				jobResult.putExtendAttribute(key, jsonObj.get(key));
+			}
+		}
+		return jobResult;
+	}
+	
+	/**
+	 * Judges the given json object contains the error information of a  
+	 * spark job or not.
+	 * 
+	 * @param jsonObj the <code>JSONObject</code> instance to be checked.
+	 * @return true if it contains the error information, false otherwise
+	 */
+	private boolean containsErrorInfo(JSONObject jsonObj) {
+		return SparkJobBaseInfo.INFO_STATUS_ERROR.equals(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
+	}
+	
+	
+	/**
+	 * Judges the given json object contains the status information of a asynchronous 
+	 * started spark job or not.
+	 * 
+	 * @param jsonObj the <code>JSONObject</code> instance to be checked.
+	 * @return true if it contains the status information of a asynchronous 
+	 *         started spark job, false otherwise
+	 */
+	private boolean containsAsynjobStatus(JSONObject jsonObj) {
+		return jsonObj != null && jsonObj.containsKey(SparkJobBaseInfo.INFO_KEY_STATUS) 
+		    && SparkJobBaseInfo.INFO_STATUS_STARTED.equals(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS))
+		    && jsonObj.containsKey(SparkJobBaseInfo.INFO_KEY_RESULT);
+	}
+	
+	/**
+	 * Sets the status information of a asynchronous started spark job to the given
+	 * job result instance.
+	 * 
+	 * @param jobResult the <code>SparkJobResult</code> instance to be set the status information
+	 * @param jsonObj the <code>JSONObject</code> instance holds the status information
+	 */
+	private void setAsynjobStatus(SparkJobResult jobResult, JSONObject jsonObj) {
+		JSONObject resultJsonObj = jsonObj.getJSONObject(SparkJobBaseInfo.INFO_KEY_RESULT);
+		jobResult.setContext(resultJsonObj.getString(SparkJobBaseInfo.INFO_KEY_CONTEXT));
+		jobResult.setJobId(resultJsonObj.getString(SparkJobBaseInfo.INFO_KEY_JOB_ID));
 	}
 }

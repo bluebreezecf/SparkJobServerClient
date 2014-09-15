@@ -48,7 +48,7 @@ public final class SparkJobServerClientFactory {
 	public ISparkJobServerClient createSparkJobServerClient(String url) 
 		throws SparkJobServerClientException {
 		if (!isValidUrl(url)) {
-			throw new SparkJobServerClientException("");
+			throw new SparkJobServerClientException("Invalid url can't be used to create a spark job server client.");
 		}
 		String sparkJobServerUrl = url.trim();
 		ISparkJobServerClient sparkJobServerClient = jobServerClientCache.get(sparkJobServerUrl);
