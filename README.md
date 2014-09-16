@@ -7,7 +7,60 @@ run a job, doesn't give client lib with any language implementation.
 
 Now there is another option to communicate with spark job server in Java, that is Spark-Job-Server-Client, the Java Client of the Spark Job Server implementing the arranged Rest APIs.
 
-###How to use Spark-Job-Server-Client
+Spark-Job-Server-Client is a open-source program of org.khaleesi.carfield under Apache License v2. It aims to make the java application more easily to use the spark.
+
+###How to compile
+If you want to generate the whole version, which is a single jar of spark-job-server-client
+containing all the dependent jars. You can execute the following commands:
+```shell
+git clone https://github.com/bluebreezecf/SparkJobServerClient.git
+cd SparkJobServerClient
+mvn clean package
+```
+Then you can find`spark-job-server-client-1.0.0.jar`in SparkJobServerClient/target, it is the main jar of spark-job-server-client. Besides, `spark-job-server-client-1.0.0-sources.jar`is the java source jar, and `spark-job-server-client-1.0.0-javadoc.jar` is the java doc api jar.
+
+If you just want a standalone version, which is a single jar of spark-job-server-client
+without any the dependent jars. You should backup current `pom.xml` and replace its contents with
+the contents in `pom.xml_standalone`
+```shell
+cd SparkJobServerClient
+mv pom.xml pom.xml_bak
+mv pom.xml_standalone pom.xml
+mvn clean package
+```
+
+###How to set dependency
+There are two kind of spark-job-servier-client, accordingly there are two approaches to set the dependency:
+
+- Use the whole version of spark-job-servier-client
+ 
+ 1. Add spark-job-server-client-1.0.0.jar to src/main/resources/lib folder of your application
+ 2. Add the following contents to the pom.xml 
+```xml
+<dependency>
+    <groupId>org.khaleesi.carfield</groupId>
+    <artifactId>spark-job-server-client</artifactId>
+    <version>1.0.0</version>
+    <scope>system</scope>
+    <systemPath>${project.basedir}/src/main/resources/lib/spark-job-server-client-1.0.0.jar</systemPath>
+</dependency>
+```
+- Use the standalone version of spark-job-servier-client
+ 1. Install spark-job-servier-client to your local maven repository
+```shell
+cd SparkJobServerClient
+mvn clean install
+```
+ 2. Add the following contents to the pom.xml 
+```xml
+<dependency>
+    <groupId>org.khaleesi.carfield</groupId>
+    <artifactId>spark-job-server-client</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+###How to use
 The following sample codes shows how to use spark-job-server-client:
 
 ```java
