@@ -73,6 +73,13 @@ import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobResult;
 import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobServerClientException;
 import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobServerClientFactory;
 
+/**
+ * A sample shows how to use spark-job-server-client.
+ * 
+ * @author bluebreezecf
+ * @since 2014-09-16
+ *
+ */
 public class SparkJobServerClientTest {
 	
 	public static void main(String[] args) {
