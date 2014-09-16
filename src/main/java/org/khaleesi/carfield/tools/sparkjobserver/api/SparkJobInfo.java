@@ -11,8 +11,25 @@ package org.khaleesi.carfield.tools.sparkjobserver.api;
  */
 public class SparkJobInfo extends SparkJobBaseInfo {
 	
+	/**
+	 * Key of duration information in the Spark Job Server's json response.
+	 * <p>
+	 * The value shows the execution time of the target spark job.
+	 */
 	static final String INFO_KEY_DURATION = "duration";
+	
+	/**
+	 * Key of classPath information in the Spark Job Server's json response.
+	 * <p>
+	 * The value shows the spark job main class which extends class of <code>SparkJob</code>.
+	 */
 	static final String INFO_KEY_CLASSPATH = "classPath";
+	
+	/**
+	 * Key of startTime information in the Spark Job Server's json response.
+	 * <p>
+	 * The value shows start time of the target spark job.
+	 */
 	static final String INFO_KEY_START_TIME = "startTime";
 	
 	private String duration;

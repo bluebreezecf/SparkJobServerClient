@@ -1,7 +1,7 @@
 package org.khaleesi.carfield.tools.sparkjobserver.api;
 
 /**
- * Acts as an base class and holds the mutual attributes of <code>SparkJobInfo</code>
+ * It acts as an base class and holds the mutual attributes of <code>SparkJobInfo</code>
  * and <code>SparkJobResult</code>.
  * 
  * @author bluebreezecf
@@ -35,13 +35,49 @@ class SparkJobBaseInfo {
 	 */
 	static final String INFO_STATUS_STARTED = "STARTED";
 	
+	/**
+	 * Key of status information in the Spark Job Server's json response.
+	 */
 	static final String INFO_KEY_STATUS = "status";
+	
+	/**
+	 * Key of result information in the Spark Job Server's json response.
+	 */
 	static final String INFO_KEY_RESULT = "result";
+	
+	/**
+	 * Key of message information of a result item in the Spark Job Server's json response.
+	 * <p>
+	 * It presents the global description of the error
+	 */
 	static final String INFO_KEY_RESULT_MESSAGE = "message";
+	
+	/**
+	 * Key of error class information of a result item in the Spark Job Server's json response.
+	 * <p>
+	 * It indicates the error class of current error message
+	 */
 	static final String INFO_KEY_RESULT_ERROR_CLASS = "errorClass";
+	
+	/**
+	 * Key of stack class information of a result item in the Spark Job Server's json response.
+	 * <p>
+	 * It shows the information of java/scala exception stack
+	 */
 	static final String INFO_KEY_RESULT_STACK = "stack";
 
+	/**
+	 * Key of context information of a result item in the Spark Job Server's json response.
+	 * <p>
+	 * It's the context name.
+	 */
 	static final String INFO_KEY_CONTEXT = "context";
+	
+	/**
+	 * Key of context information of a result item in the Spark Job Server's json response.
+	 * <p>
+	 * It shows the job id of the target spark job
+	 */
 	static final String INFO_KEY_JOB_ID = "jobId";
 	
 	private String status;

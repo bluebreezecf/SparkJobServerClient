@@ -25,6 +25,11 @@ public class SparkJobConfig {
 		this.configs.put(key, value);
 	}
 	
+	/**
+	 * Gets all the configuration items.
+	 *  
+	 * @return a map holding the key-value pairs of configuration items 
+	 */
 	public Map<String, Object> getConfigs() {
 		return new HashMap<String, Object>(this.configs);
 	}
