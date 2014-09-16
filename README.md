@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import org.khaleesi.carfield.tools.sparkjobserver.api.ISparkJobServerClient;
 import org.khaleesi.carfield.tools.sparkjobserver.api.ISparkJobServerClientConstants;
 import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobConfig;
