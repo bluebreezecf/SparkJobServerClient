@@ -3,7 +3,7 @@ Java Client of the Spark Job Server implementing the arranged Rest APIs
 
 The following sample code shows how to use spark-job-server-client:
 
-
+```java
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -71,3 +71,4 @@ public class SparkJobServerClientTest {
 		}
 	}
 }
+```
