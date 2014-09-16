@@ -1,7 +1,14 @@
-Spark Job Server Client
-Java Client of the Spark Job Server implementing the arranged Rest APIs
+##Spark-Job-Server-Client
 
-The following sample code shows how to use spark-job-server-client:
+###Backgroud
+People always use curl or HUE to upload jar and run spark job in Spark Job Server.
+But the Spark Job Server official only presents the rest apis to upload job jar and 
+run a job, doesn't give client lib with any language implementation.
+
+Now there is another option to communicate with spark job server in Java, that is Spark-Job-Server-Client, the Java Client of the Spark Job Server implementing the arranged Rest APIs.
+
+###How to use Spark-Job-Server-Client
+The following sample codes shows how to use spark-job-server-client:
 
 ```java
 import java.io.File;
