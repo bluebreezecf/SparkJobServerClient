@@ -7,7 +7,7 @@ run a job, doesn't give client lib with any language implementation.
 
 Now there is another option to communicate with spark job server in Java, that is Spark-Job-Server-Client, the Java Client of the Spark Job Server implementing the arranged Rest APIs.
 
-Spark-Job-Server-Client is a open-source program of org.khaleesi.carfield under Apache License v2. It aims to make the java application more easily to use the spark.
+Spark-Job-Server-Client is a open-source program of org.khaleesi.carfield under Apache License v2. It aims to make the java applications use the spark more easily.
 
 ###How to compile
 If you want to generate the whole version, which is a single jar of spark-job-server-client
@@ -51,6 +51,7 @@ There are two kind of spark-job-servier-client, accordingly there are two approa
 cd SparkJobServerClient
 mvn clean install
 ```
+
  2. Add the following contents to the pom.xml 
 ```xml
 <dependency>
@@ -132,3 +133,6 @@ public class SparkJobServerClientTest {
 	}
 }
 ```
+###How to contribute
+Anyone interested in this program can `fork` it, add or modify new codes, and pull request.
+Any questions and discussions can be sent email to **shijianwei2020@163.com**
