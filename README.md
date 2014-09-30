@@ -137,4 +137,4 @@ public class SparkJobServerClientTest {
 ```
 ###How to contribute
 Anyone interested in this program can `fork` it, add or modify new codes, and pull request.
-Any questions and discussions can be sent email to **shijianwei2020@163.com**
+Any questions and discussions can be added in [SparkJobServerClient/issues] (https://github.com/bluebreezecf/SparkJobServerClient/issues)
