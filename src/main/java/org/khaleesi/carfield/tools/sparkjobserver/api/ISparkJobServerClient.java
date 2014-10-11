@@ -147,16 +147,16 @@ public interface ISparkJobServerClient {
 	 *       ISparkJobServerClientConstants.PARAM_CLASS_PATH.
 	 * @param params a non-null map containing parameters to start the job.
 	 *       the key should be the following ones:
-	 *       <li><code>ISparkJobServerClientConstants.PARAM_APP_NAME</code>, necessary 
+	 *       i. <code>ISparkJobServerClientConstants.PARAM_APP_NAME</code>, necessary 
 	 *       one and should be one of the existing name in the calling of <code>GET /jars</code>.
 	 *       That means the appName is the alias name of the uploaded spark job jars.
-	 *       </li>
-	 *       <li><code>ISparkJobServerClientConstants.PARAM_CLASS_PATH</code>, necessary one
-	 *       </li>
-	 *       <li><code>ISparkJobServerClientConstants.PARAM_CONTEXT</code>, optional one
-	 *       </li>
-	 *       <li><code>ISparkJobServerClientConstants.PARAM_SYNC</code>, optional one
-	 *       </li>
+	 *
+	 *       ii.<code>ISparkJobServerClientConstants.PARAM_CLASS_PATH</code>, necessary one
+	 *
+	 *       iii.<code>ISparkJobServerClientConstants.PARAM_CONTEXT</code>, optional one
+	 *
+	 *       iv.<code>ISparkJobServerClientConstants.PARAM_SYNC</code>, optional one
+	 *
 	 * @return the corresponding job status or job result
 	 * @throws SparkJobServerClientException the given parameters exist null or empty value,
 	 *        or I/O error occurs when trying to start the new job
