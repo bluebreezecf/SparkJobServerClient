@@ -136,5 +136,12 @@ public class SparkJobServerClientTest {
 }
 ```
 ###How to contribute
-Anyone interested in this program can `fork` it, add or modify new codes, and pull request.
+Anyone interested in this program can do the following things:
+ 1. `Fork` it to your own git repository.
+ 2. Create a new branch for your feature via `git checkout -b your-new-feature`.
+ 3. Add or modify new codes.
+ 4. Commit the modifications through `git commit -am 'add your new feature'`.
+ 5. Push the new branch by `git push origin your-new-feature`.
+ 6. Create a new `pull request`.
+
 Any questions and discussions can be added in [SparkJobServerClient/issues] (https://github.com/bluebreezecf/SparkJobServerClient/issues)
