@@ -295,7 +295,12 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				
 				HttpResponse response = httpClient.execute(postMethod);
 				String resContent = getResponseContent(response.getEntity());
-				return parseResult(resContent);
+				int statusCode = response.getStatusLine().getStatusCode();
+				if (statusCode == HttpStatus.SC_OK) {
+					return parseResult(resContent);
+				} else {
+					logError(statusCode, resContent, true);
+				}
 			} else {
 				throw new SparkJobServerClientException("The given params should contains appName and classPath");
 			}
@@ -316,7 +321,14 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs/" + jobId);
 			HttpResponse response = httpClient.execute(getMethod);
 			String resContent = getResponseContent(response.getEntity());
-			return parseResult(resContent);
+			int statusCode = response.getStatusLine().getStatusCode();
+			if (statusCode == HttpStatus.SC_OK) {
+				return parseResult(resContent);
+			} else if (statusCode == HttpStatus.SC_NOT_FOUND) {
+				return new SparkJobResult(resContent);
+			} else {
+				logError(statusCode, resContent, true);
+			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of the target job:", e);
 		}

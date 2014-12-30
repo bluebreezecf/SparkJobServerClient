@@ -40,22 +40,9 @@ public class SparkJobResult extends SparkJobBaseInfo {
 	 */
 	@Override
 	public String toString() {
-		return contents;
-//		StringBuffer buff = new StringBuffer("SparkJobResult{\n");
-//		buff.append(" ").append(INFO_KEY_STATUS).append(": ")
-//			.append(this.getStatus() != null ? this.getStatus() : INFO_EMPTY_VALUE).append(",\n");
-//		if (containsAsynStatus()) {
-//			setAsynStatusInfo(buff);
-//		} else if (jobNotExists()) {
-//			setNotExistsInfo(buff);
-//		} else if (containsErrorInfo()) {
-//			setErrorInfo(buff);
-//		} 
-//		if (containsExtendAttributes()) {
-//			setExtendAttributesInfo(buff);
-//		}
-//		buff.append("}");
-//		return buff.toString();
+		StringBuffer buff = new StringBuffer("SparkJobResult\n");
+		buff.append(contents);
+		return buff.toString();
 	}
 	
 	/**

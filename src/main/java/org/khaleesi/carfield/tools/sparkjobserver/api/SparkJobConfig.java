@@ -39,7 +39,7 @@ public class SparkJobConfig {
 	 */
 	@Override
 	public String toString() {
-		StringBuffer buff = new StringBuffer("SparkJobConfig{\n");
+		StringBuffer buff = new StringBuffer("SparkJobConfig\n{\n");
 		Set<Entry<String, Object>> items = configs.entrySet();
 		for (Entry<String, Object> item : items) {
 			buff.append(" ").append(item.getKey()).append(": ")
