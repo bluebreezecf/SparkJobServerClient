@@ -93,6 +93,11 @@ public class SparkJobServerClientTest {
 			
 			//GET /contexts
 			List<String> contexts = client.getContexts();
+			System.out.println("Current contexts:");
+			for (String cxt: contexts) {
+				System.out.println(cxt);
+			}
+			
 			//POST /contexts/<name>--Create context with name ctxTest and null parameter
 			client.createContext("ctxTest", null);
 			//POST /contexts/<name>--Create context with parameters
@@ -106,23 +111,32 @@ public class SparkJobServerClientTest {
 			
 			//GET /jobs
 			List<SparkJobInfo> jobInfos = client.getJobs();
-
+			System.out.println("Current jobs:");
+			for (SparkJobInfo jobInfo: jobInfos) {
+				System.out.println(jobInfo);
+			}
+			
 			//Post /jobs---Create a new job 
 			Map<String, String> params2 = new HashMap<String, String>();
 			params.put(ISparkJobServerClientConstants.PARAM_APP_NAME, "spark-test");
 			params.put(ISparkJobServerClientConstants.PARAM_CLASS_PATH, "spark.jobserver.WordCountExample");
 			//1.start a spark job asynchronously and just get the status information
 			SparkJobResult result = client.startJob("input.string= fdsafd dfsf blullkfdsoflaw fsdfs", params);
+			System.out.println(result);
 			
 			//2.start a spark job synchronously and wait until the result
 			params.put(ISparkJobServerClientConstants.PARAM_CONTEXT, "cxtTest2");
 			params.put(ISparkJobServerClientConstants.PARAM_SYNC, "true");
 			result = client.startJob("input.string= fdsafd dfsf blullkfdsoflaw fsdffdsfsfs", params);
-
+			System.out.println(result);
+			
 			//GET /jobs/<jobId>---Gets the result or status of a specific job
 			result = client.getJobResult("fdsfsfdfwfef");
+			System.out.println(result);
+			
 			//GET /jobs/<jobId>/config - Gets the job configuration
 			SparkJobConfig jobConfig = client.getConfig("fdsfsfdfwfef");
+			System.out.println(jobConfig);
 		} catch (SparkJobServerClientException e1) {
 			e1.printStackTrace();
 		} catch (Exception e) {
