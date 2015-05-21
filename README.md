@@ -102,8 +102,8 @@ public class SparkJobServerClientTest {
 			client.createContext("ctxTest", null);
 			//POST /contexts/<name>--Create context with parameters
 			Map<String, String> params = new HashMap<String, String>();
-			params.put(ISparkJobServerClientConstants.PARAM_MEM_PER_NODE, "10");
-			params.put(ISparkJobServerClientConstants.PARAM_NUM_CPU_CORES, "512m");
+			params.put(ISparkJobServerClientConstants.PARAM_MEM_PER_NODE, "512m");
+			params.put(ISparkJobServerClientConstants.PARAM_NUM_CPU_CORES, "10");
 			client.createContext("cxtTest2", params);
 			
 			//DELETE /contexts/<name>
