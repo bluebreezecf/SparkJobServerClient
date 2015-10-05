@@ -16,9 +16,15 @@ public class SparkJobResult extends SparkJobBaseInfo {
 	private String result;
 	private Map<String, Object> extendAttributes = new HashMap<String, Object>();
 
-	SparkJobResult(String contents) {
+	SparkJobResult(String contents, String jobId) {
 		this.contents = contents;
+		setJobId(jobId);
 	}
+
+	SparkJobResult(String contents) {
+		this(contents, null);
+	}
+
 	public String getResult() {
 		return result;
 	}
@@ -53,8 +59,7 @@ public class SparkJobResult extends SparkJobBaseInfo {
 	 *         spark job, false otherwise
 	 */
 	public boolean containsAsynStatus() {
-		return SparkJobBaseInfo.ASYNC_STATUS.contains(getStatus())
-		    && getJobId() != null && getContext() != null;
+		return SparkJobBaseInfo.ASYNC_STATUS.contains(getStatus());
 	}
 
 	/**
