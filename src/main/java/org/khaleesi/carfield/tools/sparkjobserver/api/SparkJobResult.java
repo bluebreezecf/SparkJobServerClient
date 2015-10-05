@@ -53,7 +53,7 @@ public class SparkJobResult extends SparkJobBaseInfo {
 	 *         spark job, false otherwise
 	 */
 	public boolean containsAsynStatus() {
-		return SparkJobBaseInfo.INFO_STATUS_STARTED.equals(getStatus())
+		return SparkJobBaseInfo.ASYNC_STATUS.contains(getStatus())
 		    && getJobId() != null && getContext() != null;
 	}
 
