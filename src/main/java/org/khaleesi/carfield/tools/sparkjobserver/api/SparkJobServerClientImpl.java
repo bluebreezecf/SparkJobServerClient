@@ -323,9 +323,11 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			String resContent = getResponseContent(response.getEntity());
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) {
-				return parseResult(resContent);
+				final SparkJobResult jobResult = parseResult(resContent);
+				jobResult.setJobId(jobId);
+				return jobResult;
 			} else if (statusCode == HttpStatus.SC_NOT_FOUND) {
-				return new SparkJobResult(resContent);
+				return new SparkJobResult(resContent, jobId);
 			} else {
 				logError(statusCode, resContent, true);
 			}
