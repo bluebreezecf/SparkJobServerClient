@@ -1,5 +1,9 @@
 package org.khaleesi.carfield.tools.sparkjobserver.api;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * It acts as an base class and holds the mutual attributes of <code>SparkJobInfo</code>
  * and <code>SparkJobResult</code>.
@@ -34,7 +38,12 @@ class SparkJobBaseInfo {
 	 * Status value in a job status/result information (a <code>SparkJobResult</code> instance)
 	 */
 	static final String INFO_STATUS_STARTED = "STARTED";
-	
+
+	/**
+	 * Status value in a job status/result information (a <code>SparkJobResult</code> instance)
+	 */
+	static final String INFO_STATUS_RUNNING = "RUNNING";
+
 	/**
 	 * Key of status information in the Spark Job Server's json response.
 	 */
@@ -79,6 +88,9 @@ class SparkJobBaseInfo {
 	 * It shows the job id of the target spark job
 	 */
 	static final String INFO_KEY_JOB_ID = "jobId";
+
+	static final Set<String> ASYNC_STATUS = new HashSet<String>(Arrays.asList(new String[]{INFO_STATUS_STARTED, INFO_STATUS_RUNNING}));
+	static final Set<String> COMPLETED = new HashSet<String>(Arrays.asList(new String[]{INFO_STATUS_FINISHED, INFO_STATUS_OK}));
 	
 	private String status;
 	private String message;

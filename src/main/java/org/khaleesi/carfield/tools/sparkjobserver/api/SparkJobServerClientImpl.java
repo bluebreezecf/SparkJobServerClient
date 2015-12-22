@@ -512,7 +512,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		JSONObject jsonObj = JSONObject.fromObject(resContent);
 		SparkJobResult jobResult = new SparkJobResult(resContent);
 		jobResult.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
-		if (SparkJobBaseInfo.INFO_STATUS_OK.equals(jobResult.getStatus())) {
+		if (SparkJobBaseInfo.COMPLETED.contains(jobResult.getStatus())) {
 			//Job finished with results
 			jobResult.setResult(jsonObj.get(SparkJobBaseInfo.INFO_KEY_RESULT).toString());
 		} else if (containsAsynjobStatus(jsonObj)) {
