@@ -194,9 +194,4 @@ public interface ISparkJobServerClient {
 	 *         information of the target job configuration
 	 */
 	SparkJobConfig getConfig(String jobId) throws SparkJobServerClientException;
-	
-	/**
-	 * Shut down current <code>ISparkJobServerClient</code> instance.
-	 */
-	void stop();
 }
