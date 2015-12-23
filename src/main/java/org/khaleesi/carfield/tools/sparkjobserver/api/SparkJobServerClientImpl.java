@@ -11,20 +11,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 
 /**
@@ -40,8 +38,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private static Logger logger = Logger.getLogger(SparkJobServerClientImpl.class);
 	private static final int BUFFER_SIZE = 512 * 1024;
 	private String jobServerUrl;
-	private HttpClient httpClient;
-	
+
 	/**
 	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
 	 * with the given spark job server url.
@@ -53,7 +50,6 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			jobServerUrl = jobServerUrl + "/";
 		}
 		this.jobServerUrl = jobServerUrl;
-		this.httpClient = new DefaultHttpClient();
 	}
 	
 	/**
@@ -61,6 +57,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 */
 	public List<SparkJobJarInfo> getJars() throws SparkJobServerClientException {
 		List<SparkJobJarInfo> sparkJobJarInfos = new ArrayList<SparkJobJarInfo>();
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jars");
 			HttpResponse response = httpClient.execute(getMethod);
@@ -82,6 +79,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of jars:", e);
+		} finally {
+			close(httpClient);
 		}
 		return sparkJobJarInfos;
 	}
@@ -98,6 +97,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		byte[] contents = new byte[BUFFER_SIZE];
 		int len = -1;
 		StringBuffer buff = new StringBuffer();
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			while ((len = jarData.read(contents)) > 0) {
 				buff.append(new String(contents, 0, len));
@@ -114,6 +114,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			logger.error("Error occurs when uploading spark job jars:", e);
 		} finally {
+			close(httpClient);
 			closeStream(jarData);
 		}
 		return false;
@@ -144,6 +145,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 */
 	public List<String> getContexts() throws SparkJobServerClientException {
 		List<String> contexts = new ArrayList<String>();
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "contexts");
 			HttpResponse response = httpClient.execute(getMethod);
@@ -160,6 +162,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of contexts:", e);
+		} finally {
+			close(httpClient);
 		}
 		return contexts;
 	}
@@ -169,6 +173,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 */
 	public boolean createContext(String contextName, Map<String, String> params) 
 		throws SparkJobServerClientException {
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			//TODO add a check for the validation of contextName naming
 			if (!isNotEmpty(contextName)) {
@@ -199,6 +204,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to create a context:", e);
+		} finally {
+			close(httpClient);
 		}
 		return false;
 	}
@@ -208,6 +215,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 */
 	public boolean deleteContext(String contextName) 
 		throws SparkJobServerClientException {
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			//TODO add a check for the validation of contextName naming
 			if (!isNotEmpty(contextName)) {
@@ -227,6 +235,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to delete the target context:", e);
+		} finally {
+			close(httpClient);
 		}
 		return false;
 	}
@@ -236,6 +246,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 */
 	public List<SparkJobInfo> getJobs() throws SparkJobServerClientException {
 		List<SparkJobInfo> sparkJobInfos = new ArrayList<SparkJobInfo>();
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs");
 			HttpResponse response = httpClient.execute(getMethod);
@@ -261,6 +272,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of jobs:", e);
+		} finally {
+			close(httpClient);
 		}
 		return sparkJobInfos;
 	}
@@ -269,6 +282,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 * {@inheritDoc}
 	 */
 	public SparkJobResult startJob(String data, Map<String, String> params) throws SparkJobServerClientException {
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			if (params == null || params.isEmpty()) {
 				throw new SparkJobServerClientException("The given params is null or empty.");
@@ -306,6 +320,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to start a new job:", e);
+		} finally {
+			close(httpClient);
 		}
 		return null;
 	}
@@ -314,6 +330,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 * {@inheritDoc}
 	 */
 	public SparkJobResult getJobResult(String jobId) throws SparkJobServerClientException {
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			if (!isNotEmpty(jobId)) {
 				throw new SparkJobServerClientException("The given jobId is null or empty.");
@@ -333,6 +350,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of the target job:", e);
+		} finally {
+			close(httpClient);
 		}
 		return null;
 	}
@@ -341,6 +360,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 * {@inheritDoc}
 	 */
 	public SparkJobConfig getConfig(String jobId) throws SparkJobServerClientException {
+		final CloseableHttpClient httpClient = buildClient();
 		try {
 			if (!isNotEmpty(jobId)) {
 				throw new SparkJobServerClientException("The given jobId is null or empty.");
@@ -358,17 +378,12 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			return jobConfg;
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of the target job config:", e);
+		} finally {
+			close(httpClient);
 		}
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void stop() {
-		this.httpClient.getConnectionManager().shutdown();
-	}
-	
 	/**
 	 * Gets the contents of the http response from the given <code>HttpEntity</code>
 	 * instance.
@@ -467,7 +482,6 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 * 
 	 * @param key the key contains the error details
 	 * @param parnetJsonObj the parent <code>JSONObject</code> instance
-	 * @param SparkJobBaseInfo the <code>SparkJobErrorInfo</code> instance to be set information
 	 */
 	private void setErrorDetails(String key, JSONObject parnetJsonObj, SparkJobBaseInfo jobErrorInfo) {
 		if (parnetJsonObj.containsKey(key)) {
@@ -566,5 +580,17 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		JSONObject resultJsonObj = jsonObj.getJSONObject(SparkJobBaseInfo.INFO_KEY_RESULT);
 		jobResult.setContext(resultJsonObj.getString(SparkJobBaseInfo.INFO_KEY_CONTEXT));
 		jobResult.setJobId(resultJsonObj.getString(SparkJobBaseInfo.INFO_KEY_JOB_ID));
+	}
+
+	private CloseableHttpClient buildClient() {
+		return HttpClientBuilder.create().build();
+	}
+
+	private void close(final CloseableHttpClient client) {
+		try {
+			client.close();
+		} catch (final IOException e) {
+			logger.error("could not close client" , e);
+		}
 	}
 }

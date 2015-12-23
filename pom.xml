@@ -15,19 +15,13 @@
      <dependency>
 		 <groupId>org.apache.httpcomponents</groupId>
 		 <artifactId>httpclient</artifactId>
-		 <version>4.2.5</version>
+		 <version>4.5</version>
      </dependency>
      <dependency>
 		 <groupId>org.apache.httpcomponents</groupId>
 		 <artifactId>httpcore</artifactId>
-		 <version>4.2.4</version>
+		 <version>4.4.1</version>
      </dependency>
-     <!-- The above 3 items is the direct dependencies, and the following 7 ones are indirect dependencies.
-          Current pom use local dependencies settings with scope as 'system' and assigned with 'systemPath'
-          to the corresponding jar in the ${project.basedir}/src/main/resources/lib/.
-          If u want compile without local dependencies, one can remove the following dependencies and
-          remove the 'scope' and 'systemPath' elements in the above 3 items.
-     -->
      <dependency>
 		 <groupId>net.sf.json-lib</groupId>
 	     <artifactId>json-lib</artifactId>
