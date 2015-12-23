@@ -91,7 +91,7 @@ class SparkJobBaseInfo {
 
 	static final Set<String> ASYNC_STATUS = new HashSet<String>(Arrays.asList(new String[]{INFO_STATUS_STARTED, INFO_STATUS_RUNNING}));
 	static final Set<String> COMPLETED = new HashSet<String>(Arrays.asList(new String[]{INFO_STATUS_FINISHED, INFO_STATUS_OK}));
-	
+
 	private String status;
 	private String message;
 	private String errorClass;
