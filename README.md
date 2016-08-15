@@ -77,6 +77,10 @@ public class SparkJobServerClientTest {
 			client = SparkJobServerClientFactory.getInstance().createSparkJobServerClient("http://localhost:8090/");
 			//GET /jars
 			List<SparkJobJarInfo> jarInfos = client.getJars();
+			for (SparkJobJarInfo jarInfo: jarInfos) {
+				System.out.println(jarInfo.toString());
+			}
+
 			//POST /jars/<appName>
 			client.uploadSparkJobJar(new File("d:\\spark-examples_2.10-1.0.2.jar"), "spark-test");
 			
@@ -105,8 +109,7 @@ public class SparkJobServerClientTest {
 				System.out.println(jobInfo);
 			}
 			
-			//Post /jobs---Create a new job 
-			Map<String, String> params2 = new HashMap<String, String>();
+			//Post /jobs---Create a new job
 			params.put(ISparkJobServerClientConstants.PARAM_APP_NAME, "spark-test");
 			params.put(ISparkJobServerClientConstants.PARAM_CLASS_PATH, "spark.jobserver.WordCountExample");
 			//1.start a spark job asynchronously and just get the status information
@@ -130,10 +133,6 @@ public class SparkJobServerClientTest {
 			e1.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			if (client != null) {
-				client.stop();
-			}
 		}
 	}
 }
