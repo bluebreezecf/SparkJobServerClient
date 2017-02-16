@@ -2,3 +2,5 @@ target
 .classpath
 .project
 .settings
+.idea/
+spark-job-server-client.iml
