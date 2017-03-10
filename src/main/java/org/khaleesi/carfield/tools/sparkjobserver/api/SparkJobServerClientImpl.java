@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -94,15 +95,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			throw new SparkJobServerClientException("Invalid parameters.");
 		}
 		HttpPost postMethod = new HttpPost(jobServerUrl + "jars/" + appName);
-		byte[] contents = new byte[BUFFER_SIZE];
-		int len = -1;
-		StringBuffer buff = new StringBuffer();
+
 		final CloseableHttpClient httpClient = buildClient();
 		try {
-			while ((len = jarData.read(contents)) > 0) {
-				buff.append(new String(contents, 0, len));
-			}
-			ByteArrayEntity entity = new ByteArrayEntity(buff.toString().getBytes());
+			ByteArrayEntity entity = new ByteArrayEntity(IOUtils.toByteArray(jarData));
 			postMethod.setEntity(entity);
 			entity.setContentType("application/java-archive");
 			HttpResponse response = httpClient.execute(postMethod);
@@ -564,7 +560,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 *         started spark job, false otherwise
 	 */
 	private boolean containsAsynjobStatus(JSONObject jsonObj) {
-		return jsonObj != null && jsonObj.containsKey(SparkJobBaseInfo.INFO_KEY_STATUS) 
+		return jsonObj != null && jsonObj.containsKey(SparkJobBaseInfo.INFO_KEY_STATUS)
 		    && SparkJobBaseInfo.INFO_STATUS_STARTED.equals(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS))
 		    && jsonObj.containsKey(SparkJobBaseInfo.INFO_KEY_RESULT);
 	}
