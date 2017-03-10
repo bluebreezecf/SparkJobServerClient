@@ -4,10 +4,9 @@
   <artifactId>spark-job-server-client</artifactId>
   <version>1.0.0</version>
   <name>spark-job-server-client</name>
-  <description>Java Lib for Spark Job Server Rest API</description>
-  
-  <dependencies>
+	<description>Java Lib for Spark Job Server Rest API</description>
 
+	<dependencies>
      <dependency>
          <groupId>log4j</groupId>
          <artifactId>log4j</artifactId>

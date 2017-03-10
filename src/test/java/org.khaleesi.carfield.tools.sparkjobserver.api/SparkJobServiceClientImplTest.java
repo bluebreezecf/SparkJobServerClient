@@ -4,10 +4,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -19,10 +20,11 @@ import static org.hamcrest.Matchers.is;
  * @since 2017-03-08
  */
 public class SparkJobServiceClientImplTest {
-    private static final String defaultSparkJobHost = "127.0.0.1";
+    private static final String defaultSparkJobHost = "54.178.178.219";
     private static final String defaultSparkJobPort = "8090";
     private static String endpoint = String.format("http://%s:%s/", defaultSparkJobHost, defaultSparkJobPort);
     private ISparkJobServerClient client;
+    private static final long POOLING_TIME_SEC = 1;
 
     @Before
     public void setUp() throws Exception {
@@ -36,11 +38,58 @@ public class SparkJobServiceClientImplTest {
 
     }
 
+    /**
+     * test runJob with File resource
+     * Warning: This test require deleting jar after test.
+     * @throws Exception
+     */
+    @Test
+    public void testRunJobWithFile() throws Exception {
+        InputStream jarFileStream = ClassLoader.getSystemResourceAsStream("./job-server-tests-2.11-0.8.0-SNAPSHOT.jar");
+        File inputData = new File(ClassLoader.getSystemResource("input-SparkJobServiceClientImpTest.json").toURI());
+
+        String appName = "runjob-with-file-test";
+        boolean isUploaded = client.uploadSparkJobJar(jarFileStream, appName);
+
+        assertThat(isUploaded, is(true));
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(ISparkJobServerClientConstants.PARAM_APP_NAME, appName);
+        params.put(ISparkJobServerClientConstants.PARAM_CLASS_PATH, "spark.jobserver.WordCountExample");
+
+
+        SparkJobResult result = client.startJob(inputData, params);
+        String status = result.getStatus();
+
+        assertThat(status, anyOf(is("STARTED"), is("FINISHED")));
+
+        String jobId;
+        if (status.equals(SparkJobResult.INFO_STATUS_FINISHED))
+        {
+            jobId = result.getJobId();
+        } else{
+            jobId = (String) result.getExtendAttributes().get("jobId");
+        }
+
+        while (!result.getStatus().equals(SparkJobResult.INFO_STATUS_FINISHED)
+                && !result.getStatus().equals(SparkJobResult.INFO_STATUS_ERROR)){
+            TimeUnit.SECONDS.sleep(POOLING_TIME_SEC);
+            result = client.getJobResult(jobId);
+        }
+
+        assertThat(result.getResult(), is("{\"fdsafd\":1,\"a\":4,\"b\":1,\"dfsf\":1,\"c\":1}"));
+    }
+
+
+    /**
+     * Warning: This test require deleting jar after test.
+     * @throws Exception
+     */
     @Test
     public void testUploadJar() throws Exception {
         InputStream jarFileStream = ClassLoader.getSystemResourceAsStream("./job-server-tests-2.11-0.8.0-SNAPSHOT.jar");
 
-        String appName = "test8";
+        String appName = "upload-jar-test";
         boolean isUploaded = client.uploadSparkJobJar(jarFileStream, appName);
 
         assertThat(isUploaded, is(true));
