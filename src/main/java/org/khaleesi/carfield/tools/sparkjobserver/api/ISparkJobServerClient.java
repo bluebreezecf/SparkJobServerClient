@@ -162,7 +162,77 @@ public interface ISparkJobServerClient {
 	 *        or I/O error occurs when trying to start the new job
 	 */
 	SparkJobResult startJob(String data, Map<String, String> params) throws SparkJobServerClientException;
-	
+
+	/**
+	 * Start a new job with the given parameters.
+	 *
+	 * <p>
+	 * This method implements the Rest API <code>'POST /jobs' </code> of the Spark
+	 * Job Server.
+	 *
+	 * @param dataFile contains the the data processed by the target job.
+	 * 		 <p>
+	 * 	     If it is null, it means the target spark job doesn't needs any data set
+	 *       in the job configuration.
+	 * 		 <p>
+	 * 	     If it is not null, the format should be Typesafe Config Style, such as
+	 * 	     json, properties file etc. See <url>http://github.com/typesafehub/config</url>
+	 * 	     what the keys in the file are determined by the
+	 * 		 one used in the target spark job main class which is assigned by
+	 *       ISparkJobServerClientConstants.PARAM_CLASS_PATH.
+	 * @param params a non-null map containing parameters to start the job.
+	 *       the key should be the following ones:
+	 *       i. <code>ISparkJobServerClientConstants.PARAM_APP_NAME</code>, necessary
+	 *       one and should be one of the existing name in the calling of <code>GET /jars</code>.
+	 *       That means the appName is the alias name of the uploaded spark job jars.
+	 *
+	 *       ii.<code>ISparkJobServerClientConstants.PARAM_CLASS_PATH</code>, necessary one
+	 *
+	 *       iii.<code>ISparkJobServerClientConstants.PARAM_CONTEXT</code>, optional one
+	 *
+	 *       iv.<code>ISparkJobServerClientConstants.PARAM_SYNC</code>, optional one
+	 *
+	 * @return the corresponding job status or job result
+	 * @throws SparkJobServerClientException the given parameters exist null or empty value,
+	 *        or I/O error occurs when trying to start the new job
+	 */
+	SparkJobResult startJob(File dataFile, Map<String, String> params) throws SparkJobServerClientException;
+
+	/**
+	 * Start a new job with the given parameters.
+	 *
+	 * <p>
+	 * This method implements the Rest API <code>'POST /jobs' </code> of the Spark
+	 * Job Server.
+	 *
+	 * @param dataFileStream contains the the data processed by the target job.
+	 * 		 <p>
+	 * 	     If it is null, it means the target spark job doesn't needs any data set
+	 *       in the job configuration.
+	 * 		 <p>
+	 * 	     If it is not null, the format should be Typesafe Config Style, such as
+	 * 	     json, properties file etc. See <url>http://github.com/typesafehub/config</url>
+	 * 	     what the keys in the file are determined by the
+	 * 		 one used in the target spark job main class which is assigned by
+	 *       ISparkJobServerClientConstants.PARAM_CLASS_PATH.
+	 * @param params a non-null map containing parameters to start the job.
+	 *       the key should be the following ones:
+	 *       i. <code>ISparkJobServerClientConstants.PARAM_APP_NAME</code>, necessary
+	 *       one and should be one of the existing name in the calling of <code>GET /jars</code>.
+	 *       That means the appName is the alias name of the uploaded spark job jars.
+	 *
+	 *       ii.<code>ISparkJobServerClientConstants.PARAM_CLASS_PATH</code>, necessary one
+	 *
+	 *       iii.<code>ISparkJobServerClientConstants.PARAM_CONTEXT</code>, optional one
+	 *
+	 *       iv.<code>ISparkJobServerClientConstants.PARAM_SYNC</code>, optional one
+	 *
+	 * @return the corresponding job status or job result
+	 * @throws SparkJobServerClientException the given parameters exist null or empty value,
+	 *        or I/O error occurs when trying to start the new job
+	 */
+	SparkJobResult startJob(InputStream dataFileStream, Map<String, String> params) throws SparkJobServerClientException;
+
 	/**
 	 * Gets the result or status of a specific job in the Spark Job Server.
 	 * 

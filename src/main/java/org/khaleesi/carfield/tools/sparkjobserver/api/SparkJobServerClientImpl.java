@@ -1,16 +1,21 @@
 package org.khaleesi.carfield.tools.sparkjobserver.api;
 
+
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -89,7 +94,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean uploadSparkJobJar(InputStream jarData, String appName)  
+	public boolean uploadSparkJobJar(InputStream jarData, String appName)
 	    throws SparkJobServerClientException {
 		if (jarData == null || appName == null || appName.trim().length() == 0) {
 			throw new SparkJobServerClientException("Invalid parameters.");
@@ -321,7 +326,33 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		}
 		return null;
 	}
-	
+
+	@Override
+	public SparkJobResult startJob(InputStream dataFileStream, Map<String, String> params) throws SparkJobServerClientException {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(dataFileStream))){
+			String data = br.lines().collect(Collectors.joining(System.lineSeparator()));
+			return startJob(data, params);
+		} catch (IOException e) {
+			String errorMsg = "Error occurs when reading inputstream";
+			logger.error(errorMsg);
+		}
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public SparkJobResult startJob(File dataFile, Map<String, String> params) throws SparkJobServerClientException {
+		try (InputStream dataFileStream = new FileInputStream(dataFile)){
+			return startJob(dataFileStream, params);
+		} catch (IOException e) {
+			String errorMsg = "Error occurs when reading file";
+			logger.error(errorMsg);
+		}
+		return null;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
