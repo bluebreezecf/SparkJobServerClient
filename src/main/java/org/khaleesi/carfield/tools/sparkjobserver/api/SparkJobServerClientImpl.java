@@ -327,14 +327,19 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		return null;
 	}
 
-	@Override
+	/**
+	 * {@inheritDoc}
+	 */
 	public SparkJobResult startJob(InputStream dataFileStream, Map<String, String> params) throws SparkJobServerClientException {
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(dataFileStream))){
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new InputStreamReader(dataFileStream));
 			String data = br.lines().collect(Collectors.joining(System.lineSeparator()));
 			return startJob(data, params);
-		} catch (IOException e) {
-			String errorMsg = "Error occurs when reading inputstream";
-			logger.error(errorMsg);
+		} catch (Exception e) {
+			processException("Error occurs when reading inputstream:", e);
+		} finally {
+			closeStream(br);
 		}
 		return null;
 	}
@@ -342,13 +347,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public SparkJobResult startJob(File dataFile, Map<String, String> params) throws SparkJobServerClientException {
-		try (InputStream dataFileStream = new FileInputStream(dataFile)){
+		InputStream dataFileStream = null;
+		try {
+			dataFileStream = new FileInputStream(dataFile);
 			return startJob(dataFileStream, params);
-		} catch (IOException e) {
-			String errorMsg = "Error occurs when reading file";
-			logger.error(errorMsg);
+		} catch (Exception e) {
+			processException("Error occurs when reading file:", e);
+		} finally {
+			closeStream(dataFileStream);
 		}
 		return null;
 	}
