@@ -176,7 +176,7 @@ public interface ISparkJobServerClient {
 	 *       in the job configuration.
 	 * 		 <p>
 	 * 	     If it is not null, the format should be Typesafe Config Style, such as
-	 * 	     json, properties file etc. See <url>http://github.com/typesafehub/config</url>
+	 * 	     json, properties file etc. See <a href="http://github.com/typesafehub/config">http://github.com/typesafehub/config</a>
 	 * 	     what the keys in the file are determined by the
 	 * 		 one used in the target spark job main class which is assigned by
 	 *       ISparkJobServerClientConstants.PARAM_CLASS_PATH.
@@ -211,7 +211,7 @@ public interface ISparkJobServerClient {
 	 *       in the job configuration.
 	 * 		 <p>
 	 * 	     If it is not null, the format should be Typesafe Config Style, such as
-	 * 	     json, properties file etc. See <url>http://github.com/typesafehub/config</url>
+	 * 	     json, properties file etc. See <a href="http://github.com/typesafehub/config">http://github.com/typesafehub/config</a>
 	 * 	     what the keys in the file are determined by the
 	 * 		 one used in the target spark job main class which is assigned by
 	 *       ISparkJobServerClientConstants.PARAM_CLASS_PATH.
