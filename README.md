@@ -1,6 +1,6 @@
-##Spark-Job-Server-Client
+## Spark-Job-Server-Client
 
-###Backgroud
+### Backgroud
 People always use curl or HUE to upload jar and run spark job in Spark Job Server.
 But the Spark Job Server official only presents the rest apis to upload job jar and 
 run a job, doesn't give client lib with any language implementation.
@@ -9,7 +9,7 @@ Now there is another option to communicate with spark job server in Java, that i
 
 Spark-Job-Server-Client is a open-source program of **org.khaleesi.carfield** under Apache License v2. It aims to make the java applications use the spark more easily.
 
-###How to compile
+### How to compile
 You can execute the following commands to compile this client:
 ```shell
 git clone https://github.com/bluebreezecf/SparkJobServerClient.git
@@ -18,7 +18,7 @@ mvn clean package -Dmaven.test.skip=true
 ```
 Then you can find`spark-job-server-client-1.0.0.jar`in SparkJobServerClient/target, it is the main jar of spark-job-server-client. Besides, `spark-job-server-client-1.0.0-sources.jar`is the java source jar, and `spark-job-server-client-1.0.0-javadoc.jar` is the java doc api jar.
 
-###How to set dependency
+### How to set dependency
 There are two kind of spark-job-servier-client, accordingly there are two approaches to set the dependency:
 
 - Use the whole version of spark-job-servier-client
@@ -45,7 +45,7 @@ There are two kind of spark-job-servier-client, accordingly there are two approa
 </dependency>
 ```
 
-###How to use
+### How to use
 The following sample codes shows how to use spark-job-server-client:
 
 ```java
@@ -137,7 +137,7 @@ public class SparkJobServerClientTest {
 	}
 }
 ```
-###How to contribute
+### How to contribute
 Anyone interested in this program can do the following things:
  1. `Fork` it to your own git repository.
  2. Create a new branch for your feature via `git checkout -b your-new-feature`.
