@@ -547,8 +547,16 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private SparkJobResult parseResult(String resContent) throws Exception {
 		JSONObject jsonObj = JSONObject.fromObject(resContent);
 		SparkJobResult jobResult = new SparkJobResult(resContent);
-		jobResult.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
-		if (SparkJobBaseInfo.COMPLETED.contains(jobResult.getStatus())) {
+		boolean completed = false;
+		if(jsonObj.has(SparkJobBaseInfo.INFO_KEY_STATUS)) {
+			jobResult.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
+			if (SparkJobBaseInfo.COMPLETED.contains(jobResult.getStatus())) {
+				completed = true;
+			}
+		} else {
+			completed = true;
+		}
+		if (completed) {
 			//Job finished with results
 			jobResult.setResult(jsonObj.get(SparkJobBaseInfo.INFO_KEY_RESULT).toString());
 		} else if (containsAsynjobStatus(jsonObj)) {
