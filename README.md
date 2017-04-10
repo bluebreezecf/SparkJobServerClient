@@ -14,7 +14,7 @@ You can execute the following commands to compile this client:
 ```shell
 git clone https://github.com/bluebreezecf/SparkJobServerClient.git
 cd SparkJobServerClient
-mvn clean package -Dmaven.test.skip=true
+mvn clean package
 ```
 Then you can find`spark-job-server-client-1.0.0.jar`in SparkJobServerClient/target, it is the main jar of spark-job-server-client. Besides, `spark-job-server-client-1.0.0-sources.jar`is the java source jar, and `spark-job-server-client-1.0.0-javadoc.jar` is the java doc api jar.
 
