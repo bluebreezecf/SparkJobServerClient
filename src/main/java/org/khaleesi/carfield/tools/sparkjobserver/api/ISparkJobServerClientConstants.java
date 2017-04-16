@@ -9,6 +9,17 @@ package org.khaleesi.carfield.tools.sparkjobserver.api;
  *
  */
 public interface ISparkJobServerClientConstants {
+
+	/**
+	 * Parameter used to create job context, indicates the executor
+	 * instances for current spark job context.
+	 * <p>
+	 * It's value is integer.
+	 * <P>
+	 * It is equivalent to <code>PARAM_SPARK_CORES_MAX</code>.
+	 */
+	String PARAM_NUM_EXECUTORS = "spark.executor.instances";
+
 	/**
 	 * Parameter used to create job context, indicates the number of cpu cores
 	 * for current spark job context.
@@ -72,6 +83,12 @@ public interface ISparkJobServerClientConstants {
 	 * It becomes a necessary one.
 	 */
 	String PARAM_CONTEXT = "context";
+
+	/**
+	 * It's an optional parameter which is used to create contexts using context
+	 * factory.
+	 */
+	String PARAM_CONTEXT_TYPE = "context-factory";
 	
 	/**
 	 * It's an optional parameter which could be "true" or "false", 
@@ -83,4 +100,14 @@ public interface ISparkJobServerClientConstants {
 	 * It becomes a necessary one.
 	 */
 	String PARAM_SYNC = "sync";
+
+	/**
+	 * It's an optional parameter which is the number of seconds the,
+	 * should wait before timeing out. Increasing this value may be
+	 * required when using sync on long jobs.
+	 * <p>
+	 * It's value is integer.
+	 * <P>
+	 */
+	String PARAM_TIMEOUT = "timeout";
 }
