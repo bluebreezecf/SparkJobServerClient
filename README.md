@@ -7,7 +7,7 @@ run a job, doesn't give client lib with any language implementation.
 
 Now there is another option to communicate with spark job server in Java, that is Spark-Job-Server-Client, the Java Client of the Spark Job Server implementing the arranged Rest APIs.
 
-Spark-Job-Server-Client is a open-source program of **org.khaleesi.carfield** under Apache License v2. It aims to make the java applications use the spark more easily.
+Spark-Job-Server-Client is a open-source program of **com.bluebreezecf** under Apache License v2. It aims to make the java applications use the spark more easily.
 
 ### How to compile
 You can execute the following commands to compile this client:
@@ -53,14 +53,15 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.khaleesi.carfield.tools.sparkjobserver.api.ISparkJobServerClient;
-import org.khaleesi.carfield.tools.sparkjobserver.api.ISparkJobServerClientConstants;
-import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobConfig;
-import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobInfo;
-import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobJarInfo;
-import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobResult;
-import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobServerClientException;
-import org.khaleesi.carfield.tools.sparkjobserver.api.SparkJobServerClientFactory;
+
+import com.bluebreezecf.tools.sparkjobserver.api.ISparkJobServerClient;
+import com.bluebreezecf.tools.sparkjobserver.api.ISparkJobServerClientConstants;
+import com.bluebreezecf.tools.sparkjobserver.api.SparkJobConfig;
+import com.bluebreezecf.tools.sparkjobserver.api.SparkJobInfo;
+import com.bluebreezecf.tools.sparkjobserver.api.SparkJobJarInfo;
+import com.bluebreezecf.tools.sparkjobserver.api.SparkJobResult;
+import com.bluebreezecf.tools.sparkjobserver.api.SparkJobServerClientException;
+import com.bluebreezecf.tools.sparkjobserver.api.SparkJobServerClientFactory;
 
 /**
  * A sample shows how to use spark-job-server-client.
