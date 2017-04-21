@@ -27,7 +27,7 @@ There are two kind of spark-job-servier-client, accordingly there are two approa
  2. Add the following contents to the pom.xml 
 ```xml
 <dependency>
-    <groupId>org.khaleesi.carfield</groupId>
+    <groupId>com.bluebreezecf</groupId>
     <artifactId>spark-job-server-client</artifactId>
     <version>1.0.0</version>
     <scope>system</scope>
@@ -39,7 +39,7 @@ There are two kind of spark-job-servier-client, accordingly there are two approa
  2. Add the following contents to the pom.xml 
 ```xml
 <dependency>
-    <groupId>org.khaleesi.carfield</groupId>
+    <groupId>com.bluebreezecf</groupId>
     <artifactId>spark-job-server-client</artifactId>
     <version>1.0.0</version>
 </dependency>

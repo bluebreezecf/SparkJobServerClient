@@ -123,7 +123,7 @@ public interface ISparkJobServerClientConstants {
 	 * required when using sync on long jobs.
 	 * <p>
 	 * It's value is integer.
-	 * <P>
+	 * </p>
 	 */
 	String PARAM_TIMEOUT = "timeout";
 }
