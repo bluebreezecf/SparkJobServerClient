@@ -19,24 +19,7 @@ mvn clean package
 Then you can find`spark-job-server-client-1.0.0.jar`in SparkJobServerClient/target, it is the main jar of spark-job-server-client. Besides, `spark-job-server-client-1.0.0-sources.jar`is the java source jar, and `spark-job-server-client-1.0.0-javadoc.jar` is the java doc api jar.
 
 ### How to set dependency
-There are two kind of spark-job-servier-client, accordingly there are two approaches to set the dependency:
-
-- Use the whole version of spark-job-servier-client
- 
- 1. Add spark-job-server-client-1.0.0.jar to src/main/resources/lib folder of your application
- 2. Add the following contents to the pom.xml 
-```xml
-<dependency>
-    <groupId>com.bluebreezecf</groupId>
-    <artifactId>spark-job-server-client</artifactId>
-    <version>1.0.0</version>
-    <scope>system</scope>
-    <systemPath>${project.basedir}/src/main/resources/lib/spark-job-server-client-1.0.0.jar</systemPath>
-</dependency>
-```
-- Use the standalone version of spark-job-servier-client
- 1. Install spark-job-servier-client to your local maven repository with `mvn clean install`
- 2. Add the following contents to the pom.xml 
+Except the DIY way of getting the latest codes and compiling it, now the real and original **spark-job-server** has been published to [http://repo1.maven.org/maven2/](http://repo1.maven.org/maven2/com/bluebreezecf/spark-job-server-client/). So everyone, who has set the url as one of the remote maven repository, can download or get it via `mvn package` after setting the following dependency into your pom.xml.
 ```xml
 <dependency>
     <groupId>com.bluebreezecf</groupId>
@@ -44,6 +27,7 @@ There are two kind of spark-job-servier-client, accordingly there are two approa
     <version>1.0.0</version>
 </dependency>
 ```
+One can find all the releases of `spark-job-server-client` via [search.maven.org](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.bluebreezecf%22%20AND%20a%3A%22spark-job-server-client%22`).
 
 ### How to use
 The following sample codes shows how to use spark-job-server-client:
