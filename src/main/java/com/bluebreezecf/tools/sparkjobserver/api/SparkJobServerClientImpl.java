@@ -142,8 +142,12 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	 */
 	public boolean uploadSparkJobJar(File jarFile, String appName)
 		    throws SparkJobServerClientException {
-		if (jarFile == null || !jarFile.getName().endsWith(".jar") 
-			|| appName == null || appName.trim().length() == 0) {
+		if (jarFile == null 
+		    || !jarFile.getName().endsWith(".jar") 
+		    || !jarFile.getName().endsWith(".jar.original") 
+		    || appName == null 
+		    || appName.trim().length() == 0) 
+		{
 			throw new SparkJobServerClientException("Invalid parameters.");
 		}
 		InputStream jarIn = null;
