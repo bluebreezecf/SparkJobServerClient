@@ -280,4 +280,20 @@ public interface ISparkJobServerClient {
 	 *         information of the target job configuration
 	 */
 	SparkJobConfig getConfig(String jobId) throws SparkJobServerClientException;
+
+	/**
+	 * Kill the specified job
+	 *
+	 * <p>
+	 * This method implements the Rest API <code>'POST /jobs' </code> of the Spark
+	 * Job Server.
+	 *
+	 * @param jobId the id of the target job.
+	 *
+	 * @return the corresponding killed job status or killed job result
+	 * @throws SparkJobServerClientException if failed to kill a job,
+	 *        or I/O error occurs when trying to kill existing job
+	 */
+	boolean killJob(String jobId) throws SparkJobServerClientException;
+
 }

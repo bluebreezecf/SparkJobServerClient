@@ -17,21 +17,6 @@
 package com.bluebreezecf.tools.sparkjobserver.api;
 
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -46,6 +31,14 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * The default client implementation of <code>ISparkJobServerClient</code>.
@@ -438,7 +431,34 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		return null;
 	}
 
-	/**
+    @Override
+    public boolean killJob(String jobId) throws SparkJobServerClientException {
+        /*ISparkJobServerClient client = SparkJobServerClientFactory.getInstance().createSparkJobServerClient(this.jobServerUrl);
+         */
+        final CloseableHttpClient httpClient = buildClient();
+        try {
+            if (!isNotEmpty(jobId)) {
+                throw new SparkJobServerClientException("The JobId cannot Null or empty.");
+            }
+
+            HttpDelete deleteMethod = new HttpDelete(this.jobServerUrl + "jobs/" + jobId);
+            HttpResponse response = httpClient.execute(deleteMethod);
+            int statusCode = response.getStatusLine().getStatusCode();
+            String resContent = getResponseContent(response.getEntity());
+            if (statusCode == HttpStatus.SC_OK) {
+                return true;
+            } else {
+                throw new SparkJobServerClientException("Error while killing the Job. Status code : "+statusCode+" Response : "+resContent);
+            }
+        } catch (Exception e) {
+            processException("Error occured when trying to delete the target job:Message:"+e.getMessage(), e);
+        } finally {
+           close(httpClient);
+        }
+        return false;
+    }
+
+    /**
 	 * Gets the contents of the http response from the given <code>HttpEntity</code>
 	 * instance.
 	 * 
