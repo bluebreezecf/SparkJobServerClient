@@ -33,11 +33,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +49,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private static Logger logger = Logger.getLogger(SparkJobServerClientImpl.class);
 	private static final int BUFFER_SIZE = 512 * 1024;
 	private String jobServerUrl;
+	private String jobServerUsername;
+	private String jobServerPassword;
 
 	/**
 	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
@@ -66,6 +64,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		}
 		this.jobServerUrl = jobServerUrl;
 	}
+
+    SparkJobServerClientImpl(String jobServerUrl,String jobServerUsername,String jobServerPassword) {
+        if (!jobServerUrl.endsWith("/")) {
+            jobServerUrl = jobServerUrl + "/";
+        }
+        this.jobServerUrl = jobServerUrl;
+        this.jobServerUsername = jobServerUsername;
+        this.jobServerPassword = jobServerPassword;
+    }
 	
 	/**
 	 * {@inheritDoc}
@@ -75,6 +82,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jars");
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                getMethod.setHeader("Authorization",authHeader);
+            }
 			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -109,7 +120,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			throw new SparkJobServerClientException("Invalid parameters.");
 		}
 		HttpPost postMethod = new HttpPost(jobServerUrl + "jars/" + appName);
-
+        String authHeader = getBasicAuthHeader();
+        if(authHeader!=null){
+            postMethod.setHeader("Authorization",authHeader);
+        }
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			ByteArrayEntity entity = new ByteArrayEntity(IOUtils.toByteArray(jarData));
@@ -162,6 +176,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "contexts");
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                getMethod.setHeader("Authorization",authHeader);
+            }
 			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -208,6 +226,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				
 			}
 			HttpPost postMethod = new HttpPost(postUrlBuff.toString());
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                postMethod.setHeader("Authorization",authHeader);
+            }
 			HttpResponse response = httpClient.execute(postMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -239,6 +261,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			postUrlBuff.append("contexts/").append(contextName);
 			
 			HttpDelete deleteMethod = new HttpDelete(postUrlBuff.toString());
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                deleteMethod.setHeader("Authorization",authHeader);
+            }
 			HttpResponse response = httpClient.execute(deleteMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -263,6 +289,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs");
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                getMethod.setHeader("Authorization",authHeader);
+            }
 			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -314,7 +344,11 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 					}
 				}
 				HttpPost postMethod = new HttpPost(postUrlBuff.toString());
-				if (data != null) {
+                String authHeader = getBasicAuthHeader();
+                if(authHeader!=null){
+                    postMethod.setHeader("Authorization",authHeader);
+                }
+                if (data != null) {
 					StringEntity strEntity = new StringEntity(data);
 					strEntity.setContentEncoding("UTF-8");
 					strEntity.setContentType("text/plain");
@@ -383,6 +417,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				throw new SparkJobServerClientException("The given jobId is null or empty.");
 			}
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs/" + jobId);
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                getMethod.setHeader("Authorization",authHeader);
+            }
 			HttpResponse response = httpClient.execute(getMethod);
 			String resContent = getResponseContent(response.getEntity());
 			int statusCode = response.getStatusLine().getStatusCode();
@@ -413,6 +451,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				throw new SparkJobServerClientException("The given jobId is null or empty.");
 			}
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs/" + jobId + "/config");
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                getMethod.setHeader("Authorization",authHeader);
+            }
 			HttpResponse response = httpClient.execute(getMethod);
 			String resContent = getResponseContent(response.getEntity());
 			JSONObject jsonObj = JSONObject.fromObject(resContent);
@@ -442,6 +484,10 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
             }
 
             HttpDelete deleteMethod = new HttpDelete(this.jobServerUrl + "jobs/" + jobId);
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                deleteMethod.setHeader("Authorization",authHeader);
+            }
             HttpResponse response = httpClient.execute(deleteMethod);
             int statusCode = response.getStatusLine().getStatusCode();
             String resContent = getResponseContent(response.getEntity());
@@ -675,4 +721,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			logger.error("could not close client" , e);
 		}
 	}
+
+    /**
+     * Gets the Basic Auth Header Value for Spark Job Server
+     * The Value is 'Basic &lt;username&gt;:&lt;password&gt; with base64 encoding
+     */
+	private String getBasicAuthHeader(){
+	    if(isNotEmpty(this.jobServerUsername) && this.jobServerPassword != null){
+            return "Basic "+new String(Base64.getEncoder().encode((this.jobServerUsername + ":" + this.jobServerPassword).getBytes()));
+	    }
+	    return null;
+    }
 }
