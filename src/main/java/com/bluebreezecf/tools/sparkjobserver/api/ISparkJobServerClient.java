@@ -285,7 +285,7 @@ public interface ISparkJobServerClient {
 	 * Kill the specified job
 	 *
 	 * <p>
-	 * This method implements the Rest API <code>'POST /jobs' </code> of the Spark
+	 * This method implements the Rest API <code>'DELETE /jobs/&lt;jobId&gt' </code> of the Spark
 	 * Job Server.
 	 *
 	 * @param jobId the id of the target job.
