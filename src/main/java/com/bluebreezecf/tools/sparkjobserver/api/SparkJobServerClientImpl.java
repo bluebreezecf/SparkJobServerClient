@@ -51,6 +51,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private String jobServerUrl;
 	private String jobServerUsername;
 	private String jobServerPassword;
+	private static List<String> INFO_JOBS_STATUS= Arrays.asList("OK","STARTED","RUNNING","ACCEPTED","ERROR");
 
 	/**
 	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
@@ -321,6 +322,50 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		}
 		return sparkJobInfos;
 	}
+
+    /**
+     * {@inheritDoc}
+     */
+    public List<SparkJobInfo> getJobsByStatus(String jobStatus) throws SparkJobServerClientException {
+        if(!INFO_JOBS_STATUS.contains(jobStatus.toUpperCase())){
+            throw new SparkJobServerClientException("Invalid Job Status "+jobStatus+". Supported Job Status : "+INFO_JOBS_STATUS.toString());
+        }
+        List<SparkJobInfo> sparkJobInfos = new ArrayList<SparkJobInfo>();
+        final CloseableHttpClient httpClient = buildClient();
+        try {
+            HttpGet getMethod = new HttpGet(jobServerUrl + "jobs?status="+jobStatus);
+            String authHeader = getBasicAuthHeader();
+            if(authHeader!=null){
+                getMethod.setHeader("Authorization",authHeader);
+            }
+            HttpResponse response = httpClient.execute(getMethod);
+            int statusCode = response.getStatusLine().getStatusCode();
+            String resContent = getResponseContent(response.getEntity());
+            if (statusCode == HttpStatus.SC_OK) {
+                JSONArray jsonArray = JSONArray.fromObject(resContent);
+                Iterator<?> iter = jsonArray.iterator();
+                while (iter.hasNext()) {
+                    JSONObject jsonObj = (JSONObject)iter.next();
+                    SparkJobInfo jobInfo = new SparkJobInfo();
+                    jobInfo.setDuration(jsonObj.getString(SparkJobInfo.INFO_KEY_DURATION));
+                    jobInfo.setClassPath(jsonObj.getString(SparkJobInfo.INFO_KEY_CLASSPATH));
+                    jobInfo.setStartTime(jsonObj.getString(SparkJobInfo.INFO_KEY_START_TIME));
+                    jobInfo.setContext(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_CONTEXT));
+                    jobInfo.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
+                    jobInfo.setJobId(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_JOB_ID));
+                    setErrorDetails(SparkJobBaseInfo.INFO_KEY_RESULT, jsonObj, jobInfo);
+                    sparkJobInfos.add(jobInfo);
+                }
+            } else {
+                logError(statusCode, resContent, true);
+            }
+        } catch (Exception e) {
+            processException("Error occurs when trying to get information of jobs:", e);
+        } finally {
+            close(httpClient);
+        }
+        return sparkJobInfos;
+    }
 	
 	/**
 	 * {@inheritDoc}
@@ -616,7 +661,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				JSONArray stackJsonArray = resultJson.getJSONArray(SparkJobInfo.INFO_KEY_RESULT_STACK);
 				String[] stack = new String[stackJsonArray.size()];
 				for (int i = 0; i < stackJsonArray.size(); i++) {
-					stack[i] = stackJsonArray.getString(i);
+					stack[i] = stackJsonArray.optString(i);
 				}
 				jobErrorInfo.setStack(stack);
 			}

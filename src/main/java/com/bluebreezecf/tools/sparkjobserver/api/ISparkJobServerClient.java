@@ -144,6 +144,21 @@ public interface ISparkJobServerClient {
 	 *         information of jobs
 	 */
 	List<SparkJobInfo> getJobs() throws SparkJobServerClientException;
+
+	/**
+	 * Lists the last N jobs in the Spark Job Server for the specified job status.
+	 *
+	 * <p>
+	 * This method implements the Rest API <code>'GET /jobs&quest;status&equals;&lpar;RUNNING&verbar;ERROR&verbar;FINISHED&verbar;
+	 * STARTED&verbar;OK&rpar;' </code> of the Spark
+	 * Job Server.
+	 *</p>
+	 * @param jobStatus RUNNING OK ERROR FINISHED STARTED
+	 * @return a list containing information of the jobs for specified status
+	 * @throws SparkJobServerClientException error occurs when trying to get
+	 *         information of jobs
+	 */
+	List<SparkJobInfo> getJobsByStatus(String jobStatus) throws SparkJobServerClientException;
 	
 	/**
 	 * Start a new job with the given parameters.
