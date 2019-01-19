@@ -85,20 +85,20 @@ public final class SparkJobServerClientFactory {
 	 * @throws SparkJobServerClientException error occurs when trying to create the
 	 *     target spark job server client
 	 */
-	public ISparkJobServerClient createSparkJobServerClient(String url,String jobServerUsername,String jobServerPassword)
-			throws SparkJobServerClientException {
+	public ISparkJobServerClient createSparkJobServerClient(String url, String jobServerUsername,
+        String jobServerPassword) throws SparkJobServerClientException {
 		if (!isValidUrl(url)) {
 			throw new SparkJobServerClientException("Invalid url can't be used to create a spark job server client.");
 		}
-		if(jobServerUsername == null || jobServerUsername.isEmpty()) {
+		if (jobServerUsername == null || jobServerUsername.isEmpty()) {
 			throw new SparkJobServerClientException("Invalid username can't be null or empty.");
 		}
 		String sparkJobServerUrl = url.trim();
 		jobServerUsername = jobServerUsername.trim();
-		ISparkJobServerClient sparkJobServerClient = jobServerClientCache.get(sparkJobServerUrl+"_@_"+jobServerUsername+"_@_"+jobServerPassword);
+		ISparkJobServerClient sparkJobServerClient = jobServerClientCache.get(sparkJobServerUrl + "_@_" + jobServerUsername + "_@_" + jobServerPassword);
 		if (null == sparkJobServerClient) {
-			sparkJobServerClient = new SparkJobServerClientImpl(url,jobServerUsername,jobServerPassword);
-			jobServerClientCache.put(sparkJobServerUrl+"_@_"+jobServerUsername+"_@_"+jobServerPassword, sparkJobServerClient);
+			sparkJobServerClient = new SparkJobServerClientImpl(url, jobServerUsername, jobServerPassword);
+			jobServerClientCache.put(sparkJobServerUrl + "_@_" + jobServerUsername + "_@_" + jobServerPassword, sparkJobServerClient);
 		}
 		return sparkJobServerClient;
 	}
