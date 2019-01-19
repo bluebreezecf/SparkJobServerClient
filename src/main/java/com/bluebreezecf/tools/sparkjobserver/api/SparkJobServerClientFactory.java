@@ -90,7 +90,7 @@ public final class SparkJobServerClientFactory {
 		if (!isValidUrl(url)) {
 			throw new SparkJobServerClientException("Invalid url can't be used to create a spark job server client.");
 		}
-		if(jobServerUsername == null || jobServerUsername.isEmpty()){
+		if(jobServerUsername == null || jobServerUsername.isEmpty()) {
 			throw new SparkJobServerClientException("Invalid username can't be null or empty.");
 		}
 		String sparkJobServerUrl = url.trim();
