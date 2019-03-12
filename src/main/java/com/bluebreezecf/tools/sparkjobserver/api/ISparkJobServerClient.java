@@ -144,6 +144,21 @@ public interface ISparkJobServerClient {
 	 *         information of jobs
 	 */
 	List<SparkJobInfo> getJobs() throws SparkJobServerClientException;
+
+	/**
+	 * Lists the last N jobs in the Spark Job Server for the specified job status.
+	 *
+	 * <p>
+	 * This method implements the Rest API <code>'GET /jobs&quest;status&equals;&lpar;RUNNING&verbar;ERROR&verbar;FINISHED&verbar;
+	 * STARTED&verbar;OK&rpar;' </code> of the Spark
+	 * Job Server.
+	 *</p>
+	 * @param jobStatus RUNNING OK ERROR FINISHED STARTED
+	 * @return a list containing information of the jobs for specified status
+	 * @throws SparkJobServerClientException error occurs when trying to get
+	 *         information of jobs
+	 */
+	List<SparkJobInfo> getJobsByStatus(String jobStatus) throws SparkJobServerClientException;
 	
 	/**
 	 * Start a new job with the given parameters.
@@ -280,4 +295,20 @@ public interface ISparkJobServerClient {
 	 *         information of the target job configuration
 	 */
 	SparkJobConfig getConfig(String jobId) throws SparkJobServerClientException;
+
+	/**
+	 * Kill the specified job
+	 *
+	 * <p>
+	 * This method implements the Rest API <code>'DELETE /jobs/&lt;jobId&gt' </code> of the Spark
+	 * Job Server.
+	 *
+	 * @param jobId the id of the target job.
+	 *
+	 * @return the corresponding killed job status or killed job result
+	 * @throws SparkJobServerClientException if failed to kill a job,
+	 *        or I/O error occurs when trying to kill existing job
+	 */
+	boolean killJob(String jobId) throws SparkJobServerClientException;
+
 }
