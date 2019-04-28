@@ -103,9 +103,9 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			jobServerUrl = jobServerUrl + "/";
 		}
 		this.jobServerUrl = jobServerUrl;
-		this.socketTimeOut = connectionTimeOut == null? DEFAULT_CONNECTION_TIMEOUT : connectionTimeOut;
+		this.socketTimeOut = socketTimeOut == null ? DEFAULT_SOCKET_TIMEOUT : socketTimeOut;
 		this.connectionReqTimeOut = connectionReqTimeOut == null ? DEFAULT_REQUEST_TIMEOUT : connectionReqTimeOut;
-		this.connectionTimeOut = socketTimeOut == null ? DEFAULT_SOCKET_TIMEOUT : socketTimeOut;
+		this.connectionTimeOut = connectionTimeOut == null ? DEFAULT_CONNECTION_TIMEOUT : connectionTimeOut;
 	}
 
     /**
