@@ -38,9 +38,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -60,9 +62,15 @@ import org.apache.log4j.Logger;
 class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private static Logger logger = Logger.getLogger(SparkJobServerClientImpl.class);
 	private static final int BUFFER_SIZE = 512 * 1024;
+	private static final int DEFAULT_CONNECTION_TIMEOUT=60000;
+	private static final int DEFAULT_SOCKET_TIMEOUT=60000;
+	private static final int DEFAULT_REQUEST_TIMEOUT=60000;
 	private String jobServerUrl;
 	private String jobServerUsername;
 	private String jobServerPassword;
+	private Integer connectionTimeOut;
+	private Integer connectionReqTimeOut;
+	private Integer socketTimeOut;
 	private static List<String> INFO_JOBS_STATUS = Arrays.asList("OK", "STARTED", "RUNNING", "ACCEPTED", "ERROR");
 
 	/**
@@ -76,6 +84,28 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			jobServerUrl = jobServerUrl + "/";
 		}
 		this.jobServerUrl = jobServerUrl;
+		this.socketTimeOut = DEFAULT_SOCKET_TIMEOUT;
+		this.connectionReqTimeOut = DEFAULT_REQUEST_TIMEOUT;
+		this.connectionTimeOut = DEFAULT_CONNECTION_TIMEOUT;
+	}
+
+	/**
+	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
+	 * with the given spark job server url.
+	 *
+	 * @param jobServerUrl a url pointing to a existing spark job server
+	 * @param connectionTimeOut TimeOut in milliseconds for to establish Connection
+	 * @param connectionReqTimeOut TimeOut in milliseconds for a connection Request
+	 * @param socketTimeOut Timeout in milliseconds for Socket to transfer data
+	 */
+	SparkJobServerClientImpl(String jobServerUrl, Integer connectionTimeOut, Integer connectionReqTimeOut, Integer socketTimeOut) {
+		if (!jobServerUrl.endsWith("/")) {
+			jobServerUrl = jobServerUrl + "/";
+		}
+		this.jobServerUrl = jobServerUrl;
+		this.socketTimeOut = connectionTimeOut == null? DEFAULT_SOCKET_TIMEOUT : connectionTimeOut;
+		this.connectionReqTimeOut = connectionReqTimeOut == null ? DEFAULT_REQUEST_TIMEOUT : connectionReqTimeOut;
+		this.connectionTimeOut = socketTimeOut == null ? DEFAULT_CONNECTION_TIMEOUT : socketTimeOut;
 	}
 
     /**
@@ -88,13 +118,52 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
      */
     SparkJobServerClientImpl(String jobServerUrl, String jobServerUsername,
         String jobServerPassword) {
-        if (!jobServerUrl.endsWith("/")) {
-            jobServerUrl = jobServerUrl + "/";
-        }
-        this.jobServerUrl = jobServerUrl;
+        this(jobServerUrl);
         this.jobServerUsername = jobServerUsername;
         this.jobServerPassword = jobServerPassword;
     }
+
+	/**
+	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
+	 * with the given spark job server url, username and password with HTTP TimeOuts.
+	 *
+	 * @param jobServerUrl a url pointing to a existing spark job server
+	 * @param jobServerUsername a username to a existing spark job server
+	 * @param jobServerPassword  a password to a existing spark job server
+	 * @param connectionTimeOut TimeOut in milliseconds for to establish Connection
+	 * @param connectionReqTimeOut TimeOut in milliseconds for a connection Request
+	 * @param socketTimeOut Timeout in milliseconds for Socket to transfer data
+	 */
+	SparkJobServerClientImpl(String jobServerUrl, String jobServerUsername,
+							 String jobServerPassword, Integer connectionTimeOut, Integer connectionReqTimeOut, Integer socketTimeOut) {
+		this(jobServerUrl, connectionTimeOut, connectionReqTimeOut, socketTimeOut);
+		this.jobServerUsername = jobServerUsername;
+		this.jobServerPassword = jobServerPassword;
+	}
+
+	/**
+	 * Constructs an instance of <code>RequestConfig</code>
+	 * with configured timeouts for the connection.
+	 */
+    private RequestConfig getRequestConfig() {
+		RequestConfig.Builder requestConfig = RequestConfig.custom();
+		requestConfig.setConnectTimeout(this.connectionTimeOut);
+		requestConfig.setConnectionRequestTimeout(this.connectionReqTimeOut);
+		requestConfig.setSocketTimeout(this.socketTimeOut);
+		return requestConfig.build();
+	}
+
+	/**
+	 * Set Authorization Header in the given <Code>HttpRequestBase</Code>.
+	 *
+	 * @param requestBase HttpRequestBase for the specified endPoint URL
+	 */
+	private void setAuthorization(HttpRequestBase requestBase) {
+		String authHeader = getBasicAuthHeader();
+		if (authHeader != null) {
+			requestBase.setHeader("Authorization", authHeader);
+		}
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -105,10 +174,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jars");
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                getMethod.setHeader("Authorization", authHeader);
-            }
+			getMethod.setConfig(getRequestConfig());
+            setAuthorization(getMethod);
 			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -143,10 +210,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			throw new SparkJobServerClientException("Invalid parameters.");
 		}
 		HttpPost postMethod = new HttpPost(jobServerUrl + "jars/" + appName);
-        String authHeader = getBasicAuthHeader();
-        if (authHeader != null) {
-            postMethod.setHeader("Authorization", authHeader);
-        }
+        postMethod.setConfig(getRequestConfig());
+		setAuthorization(postMethod);
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			ByteArrayEntity entity = new ByteArrayEntity(IOUtils.toByteArray(jarData));
@@ -199,10 +264,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "contexts");
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                getMethod.setHeader("Authorization", authHeader);
-            }
+			getMethod.setConfig(getRequestConfig());
+            setAuthorization(getMethod);
 			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -249,10 +312,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				
 			}
 			HttpPost postMethod = new HttpPost(postUrlBuff.toString());
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                postMethod.setHeader("Authorization", authHeader);
-            }
+			postMethod.setConfig(getRequestConfig());
+            setAuthorization(postMethod);
 			HttpResponse response = httpClient.execute(postMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -284,10 +345,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			postUrlBuff.append("contexts/").append(contextName);
 			
 			HttpDelete deleteMethod = new HttpDelete(postUrlBuff.toString());
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                deleteMethod.setHeader("Authorization", authHeader);
-            }
+			deleteMethod.setConfig(getRequestConfig());
+            setAuthorization(deleteMethod);
 			HttpResponse response = httpClient.execute(deleteMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -312,10 +371,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		final CloseableHttpClient httpClient = buildClient();
 		try {
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs");
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                getMethod.setHeader("Authorization", authHeader);
-            }
+			getMethod.setConfig(getRequestConfig());
+            setAuthorization(getMethod);
 			HttpResponse response = httpClient.execute(getMethod);
 			int statusCode = response.getStatusLine().getStatusCode();
 			String resContent = getResponseContent(response.getEntity());
@@ -324,14 +381,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				Iterator<?> iter = jsonArray.iterator();
 				while (iter.hasNext()) {
 					JSONObject jsonObj = (JSONObject)iter.next();
-					SparkJobInfo jobInfo = new SparkJobInfo();
-					jobInfo.setDuration(jsonObj.getString(SparkJobInfo.INFO_KEY_DURATION));
-					jobInfo.setClassPath(jsonObj.getString(SparkJobInfo.INFO_KEY_CLASSPATH));
-					jobInfo.setStartTime(jsonObj.getString(SparkJobInfo.INFO_KEY_START_TIME));
-					jobInfo.setContext(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_CONTEXT));
-					jobInfo.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
-					jobInfo.setJobId(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_JOB_ID));
-					setErrorDetails(SparkJobBaseInfo.INFO_KEY_RESULT, jsonObj, jobInfo);
+					SparkJobInfo jobInfo = createSparkJobInfo(jsonObj);
 					sparkJobInfos.add(jobInfo);
 				}
 			} else {
@@ -350,16 +400,16 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
      */
     public List<SparkJobInfo> getJobsByStatus(String jobStatus) throws SparkJobServerClientException {
         if (!INFO_JOBS_STATUS.contains(jobStatus.toUpperCase())) {
-            throw new SparkJobServerClientException("Invalid Job Status " + jobStatus + ". Supported Job Status : " + INFO_JOBS_STATUS.toString());
+            throw new SparkJobServerClientException("Invalid Job Status " +
+					jobStatus + ". Supported Job Status : " +
+					INFO_JOBS_STATUS.toString());
         }
         List<SparkJobInfo> sparkJobInfos = new ArrayList<SparkJobInfo>();
         final CloseableHttpClient httpClient = buildClient();
         try {
             HttpGet getMethod = new HttpGet(jobServerUrl + "jobs?status=" + jobStatus);
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                getMethod.setHeader("Authorization", authHeader);
-            }
+            getMethod.setConfig(getRequestConfig());
+            setAuthorization(getMethod);
             HttpResponse response = httpClient.execute(getMethod);
             int statusCode = response.getStatusLine().getStatusCode();
             String resContent = getResponseContent(response.getEntity());
@@ -368,14 +418,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
                 Iterator<?> iter = jsonArray.iterator();
                 while (iter.hasNext()) {
                     JSONObject jsonObj = (JSONObject)iter.next();
-                    SparkJobInfo jobInfo = new SparkJobInfo();
-                    jobInfo.setDuration(jsonObj.getString(SparkJobInfo.INFO_KEY_DURATION));
-                    jobInfo.setClassPath(jsonObj.getString(SparkJobInfo.INFO_KEY_CLASSPATH));
-                    jobInfo.setStartTime(jsonObj.getString(SparkJobInfo.INFO_KEY_START_TIME));
-                    jobInfo.setContext(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_CONTEXT));
-                    jobInfo.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
-                    jobInfo.setJobId(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_JOB_ID));
-                    setErrorDetails(SparkJobBaseInfo.INFO_KEY_RESULT, jsonObj, jobInfo);
+                    SparkJobInfo jobInfo = createSparkJobInfo(jsonObj);
                     sparkJobInfos.add(jobInfo);
                 }
             } else {
@@ -388,6 +431,25 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
         }
         return sparkJobInfos;
     }
+
+	/**
+	 * Constructs an instance of <code>SparkJobInfo</code>
+	 * from the given spark job JSON.
+	 *
+	 * @param jsonObj spark job json returned by spark job server
+	 */
+    private SparkJobInfo createSparkJobInfo(JSONObject jsonObj) {
+    	SparkJobInfo toReturn = new SparkJobInfo();
+		toReturn.setDuration(jsonObj.getString(SparkJobInfo.INFO_KEY_DURATION));
+		toReturn.setClassPath(jsonObj.getString(SparkJobInfo.INFO_KEY_CLASSPATH));
+		toReturn.setStartTime(jsonObj.getString(SparkJobInfo.INFO_KEY_START_TIME));
+		toReturn.setContext(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_CONTEXT));
+		toReturn.setStatus(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_STATUS));
+		toReturn.setJobId(jsonObj.getString(SparkJobBaseInfo.INFO_KEY_JOB_ID));
+		toReturn.setContextId(jsonObj.getString(SparkJobInfo.INFO_CONTEXT_ID));
+		setErrorDetails(SparkJobBaseInfo.INFO_KEY_RESULT, jsonObj, toReturn);
+		return toReturn;
+	}
 	
 	/**
 	 * {@inheritDoc}
@@ -411,10 +473,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 					}
 				}
 				HttpPost postMethod = new HttpPost(postUrlBuff.toString());
-                String authHeader = getBasicAuthHeader();
-                if (authHeader != null) {
-                    postMethod.setHeader("Authorization", authHeader);
-                }
+				postMethod.setConfig(getRequestConfig());
+                setAuthorization(postMethod);
                 if (data != null) {
 					StringEntity strEntity = new StringEntity(data);
 					strEntity.setContentEncoding("UTF-8");
@@ -484,10 +544,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				throw new SparkJobServerClientException("The given jobId is null or empty.");
 			}
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs/" + jobId);
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                getMethod.setHeader("Authorization", authHeader);
-            }
+			getMethod.setConfig(getRequestConfig());
+            setAuthorization(getMethod);
 			HttpResponse response = httpClient.execute(getMethod);
 			String resContent = getResponseContent(response.getEntity());
 			int statusCode = response.getStatusLine().getStatusCode();
@@ -518,10 +576,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				throw new SparkJobServerClientException("The given jobId is null or empty.");
 			}
 			HttpGet getMethod = new HttpGet(jobServerUrl + "jobs/" + jobId + "/config");
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                getMethod.setHeader("Authorization", authHeader);
-            }
+			getMethod.setConfig(getRequestConfig());
+            setAuthorization(getMethod);
 			HttpResponse response = httpClient.execute(getMethod);
 			String resContent = getResponseContent(response.getEntity());
 			JSONObject jsonObj = JSONObject.fromObject(resContent);
@@ -551,10 +607,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
             }
 
             HttpDelete deleteMethod = new HttpDelete(this.jobServerUrl + "jobs/" + jobId);
-            String authHeader = getBasicAuthHeader();
-            if (authHeader != null) {
-                deleteMethod.setHeader("Authorization", authHeader);
-            }
+            deleteMethod.setConfig(getRequestConfig());
+            setAuthorization(deleteMethod);
             HttpResponse response = httpClient.execute(deleteMethod);
             int statusCode = response.getStatusLine().getStatusCode();
             String resContent = getResponseContent(response.getEntity());
