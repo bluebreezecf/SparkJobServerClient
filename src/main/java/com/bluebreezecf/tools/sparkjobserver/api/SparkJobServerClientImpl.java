@@ -680,12 +680,18 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				jobErrorInfo.setErrorClass(resultJson.getString(SparkJobInfo.INFO_KEY_RESULT_ERROR_CLASS));
 			}
 			if (resultJson.containsKey(SparkJobInfo.INFO_KEY_RESULT_STACK)) {
-				JSONArray stackJsonArray = resultJson.getJSONArray(SparkJobInfo.INFO_KEY_RESULT_STACK);
-				String[] stack = new String[stackJsonArray.size()];
-				for (int i = 0; i < stackJsonArray.size(); i++) {
-					stack[i] = stackJsonArray.optString(i);
+				if (resultJson.get(SparkJobInfo.INFO_KEY_RESULT_STACK) instanceof String) {
+					String[] stack = { resultJson.getString(SparkJobInfo.INFO_KEY_RESULT_STACK) };
+					jobErrorInfo.setStack(stack);
+
+				} else {
+					JSONArray stackJsonArray = resultJson.getJSONArray(SparkJobInfo.INFO_KEY_RESULT_STACK);
+					String[] stack = new String[stackJsonArray.size()];
+					for (int i = 0; i < stackJsonArray.size(); i++) {
+						stack[i] = stackJsonArray.optString(i);
+					}
+					jobErrorInfo.setStack(stack);
 				}
-				jobErrorInfo.setStack(stack);
 			}
 		}
 	}
