@@ -103,6 +103,44 @@ public final class SparkJobServerClientFactory {
 		return sparkJobServerClient;
 	}
 
+    /**
+     * Creates an instance of <code>ISparkJobServerClient</code> with the given
+     * url, username and password and Http Connection, Request, Socket Timeouts
+     *
+     * @param url the url of the target Spark Job Server
+     * @param jobServerUsername the username for authentication of target Spark Job Server
+     * @param jobServerPassword the password for authentication of the target Spark Job Server
+     * @param connectionTimeOut
+     * @param connectionReqTimeOut
+     * @param socketTimeOut
+     * @return the corresponding <code>ISparkJobServerClient</code> instance
+     * @throws SparkJobServerClientException error occurs when trying to create the
+     *     target spark job server client
+     */
+    public ISparkJobServerClient createSparkJobServerClient(String url, String jobServerUsername,
+                                                            String jobServerPassword, Integer connectionTimeOut,
+                                                            Integer connectionReqTimeOut,
+                                                            Integer socketTimeOut) throws SparkJobServerClientException {
+        if (!isValidUrl(url)) {
+            throw new SparkJobServerClientException("Invalid url can't be used to create a spark job server client.");
+        }
+        if (jobServerUsername == null || jobServerUsername.isEmpty()) {
+            throw new SparkJobServerClientException("Invalid username can't be null or empty.");
+        }
+        String sparkJobServerUrl = url.trim();
+        jobServerUsername = jobServerUsername.trim();
+        String cacheKey = sparkJobServerUrl + "_@_" + jobServerUsername
+                + "_@_" + jobServerPassword + "_@_" + connectionTimeOut + "_@_" + connectionReqTimeOut +
+                "_@_" + socketTimeOut;
+        ISparkJobServerClient sparkJobServerClient = jobServerClientCache.get(cacheKey);
+        if (null == sparkJobServerClient) {
+            sparkJobServerClient = new SparkJobServerClientImpl(url, jobServerUsername, jobServerPassword,
+                    connectionTimeOut, connectionReqTimeOut, socketTimeOut);
+            jobServerClientCache.put(cacheKey, sparkJobServerClient);
+        }
+        return sparkJobServerClient;
+    }
+
 	/**
 	 * Checks the given url is valid or not.
 	 * 

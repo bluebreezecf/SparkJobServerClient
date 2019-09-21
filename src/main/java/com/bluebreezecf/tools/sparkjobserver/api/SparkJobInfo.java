@@ -47,10 +47,18 @@ public class SparkJobInfo extends SparkJobBaseInfo {
 	 * The value shows start time of the target spark job.
 	 */
 	static final String INFO_KEY_START_TIME = "startTime";
+
+	/**
+	 * Id of Context information in the Spark Job Server's json response.
+	 * <p>
+	 * The value shows Unique Identification for the context of the target spark job.
+	 */
+	static final String INFO_CONTEXT_ID = "contextId";
 	
 	private String duration;
 	private String classPath;
 	private String startTime;
+	private String contextId;
 
 	
 	public String getDuration() {
@@ -71,6 +79,12 @@ public class SparkJobInfo extends SparkJobBaseInfo {
 	void setStartTime(String startTime) {
 		this.startTime = startTime;
 	}
+	public String getContextId() {
+		return contextId;
+	}
+	void setContextId(String contextId) {
+		this.contextId = contextId;
+	}
 	
 	/**
 	 * {@inheritDoc}
@@ -90,7 +104,9 @@ public class SparkJobInfo extends SparkJobBaseInfo {
 			.append(" ").append(INFO_KEY_JOB_ID).append(": ")
 			.append(this.getJobId() != null ? this.getJobId() : INFO_EMPTY_VALUE).append("\n")
 			.append(" ").append(INFO_KEY_STATUS).append(": ")
-			.append(this.getStatus() != null ? this.getStatus() : INFO_EMPTY_VALUE).append("\n");
+			.append(this.getStatus() != null ? this.getStatus() : INFO_EMPTY_VALUE).append("\n")
+			.append(" ").append(INFO_CONTEXT_ID).append(": ")
+			.append(this.getContextId() != null ? this.getContextId() : INFO_EMPTY_VALUE).append("\n");
 		if (this.getMessage() != null) {
 			buff.append(" ").append(INFO_KEY_RESULT).append(": {\n")
 				.append("  ").append(INFO_KEY_RESULT_MESSAGE).append(": ").append(getMessage()).append("\n");
